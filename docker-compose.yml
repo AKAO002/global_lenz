@@ -18,6 +18,8 @@ services:
       - ./backend/.env
     depends_on:
       - redis
+    volumes:
+      - ./backend:/app
 
   redis:
     image: redis:7
