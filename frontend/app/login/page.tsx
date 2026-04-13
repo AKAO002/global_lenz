@@ -9,10 +9,9 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const searchParams = useSearchParams();
+  const router = useRouter();
   const redirect = searchParams.get('redirect') || '/';
   console.log('redirect', redirect);
-
-  const router = useRouter();
 
   const handleLogin = async () => {
     try {
