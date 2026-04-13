@@ -189,6 +189,14 @@ docker compose up --build
 .env
 ```
 
+を作成してください。中身は空のままでいいです。
+
+バックエンドディレクトリの直下に：
+
+```text
+.env
+```
+
 を作成してください。
 
 例：
@@ -197,7 +205,8 @@ docker compose up --build
 OPENAI_API_KEY=your_openai_key
 
 SUPABASE_URL=your_supabase_url
-SUPABASE_KEY=your_supabase_key
+SUPABASE_SERVICE_KEY=your_supabase_key
+SUPABASE_ANON_KEY=your_supabase_anon_key
 
 REDIS_HOST=redis
 REDIS_PORT=6379
