@@ -39,9 +39,7 @@ build/Release
 
 # Dependency directories
 # どの階層にある node_modules もすべて無視する
-**/node_modules/
-frontend/node_modules/
-backend/node_modules/
+node_modules/
 jspm_packages/
 
 # Snowpack dependency directory (https://snowpack.dev/)
