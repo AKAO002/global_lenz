@@ -3,7 +3,7 @@ import urllib.parse
 import time
 from googlenewsdecoder import gnewsdecoder
 from config import SOURCES, GOOGLE_SOURCE_FILTERS, MEDIA_DOMAINS
-from services.ai_service import is_article_relevant
+from logic.ai_service import is_article_relevant
 
 # -------------------------------------------------------
 # STEP A: トレンド見出し収集

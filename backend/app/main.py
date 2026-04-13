@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 import time
 from config import SOURCES
-from services.news_service import collect_headlines, fetch_media_articles
-from services.ai_service import discover_trending_topics, generate_combined_report
+from logic.news_service import collect_headlines, fetch_media_articles
+from logic.ai_service import discover_trending_topics, generate_combined_report
 from db.repository import get_supabase_client, save_to_db
 
 app = FastAPI()
