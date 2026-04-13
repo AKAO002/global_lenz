@@ -38,6 +38,7 @@ bower_components
 build/Release
 
 # Dependency directories
+# どの階層にある node_modules もすべて無視する
 node_modules/
 jspm_packages/
 
