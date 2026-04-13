@@ -1,8 +1,8 @@
 'use client';
 
 import { useAuth } from '@/context/AuthContext';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 export default function RequireAuth({
   children,
@@ -11,12 +11,15 @@ export default function RequireAuth({
 }) {
   const { user } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) {
-      router.push('/login');
+    if (user === null && pathname) {
+      const redirectPath = encodeURIComponent(pathname);
+      router.replace(`/login?redirect=${redirectPath}`);
     }
-  }, [user]);
+  }, [user, router, pathname]);
 
   if (!user) return null;
 
