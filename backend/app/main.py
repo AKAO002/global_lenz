@@ -2,6 +2,7 @@ from fastapi import FastAPI
 
 from app.api import country_summaries
 from app.api import comparison_summaries
+from app.api import favorites
 
 app = FastAPI()
 
@@ -20,4 +21,10 @@ app.include_router(
     comparison_summaries.router,
     prefix="/api/comparison-summaries",
     tags=["ComparisonSummaries"]
+)
+
+app.include_router(
+    favorites.router,
+    prefix="/api/favorites",
+    tags=["favorites"]
 )
