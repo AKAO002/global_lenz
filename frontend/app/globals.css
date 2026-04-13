@@ -10,6 +10,7 @@
   --brand-muted: #6b6560;
   --brand-text: #2c2c2c;
   --brand-accent: #7895b2;
+  --brand-accent-deep: #4a667d;
 }
 
 @theme inline {
@@ -21,6 +22,7 @@
   --color-brand-muted: var(--brand-muted);
   --color-brand-text: var(--brand-text);
   --color-brand-accent: var(--brand-accent);
+  --color-brand-accent-deep: var(--brand-accent-deep);
   --shadow-soft: 0 2px 12px rgb(44 44 44 / 0.06);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
