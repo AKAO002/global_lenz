@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import APIRouter
 
 from app.api import country_summaries
 from app.api import comparison_summaries
@@ -7,7 +7,7 @@ from app.api import favorites
 router = APIRouter()
 
 
-@app.get("/")
+@router.get("/")
 def root():
     return {"message": "Hot Reload確認OK"}
 

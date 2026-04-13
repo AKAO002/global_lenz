@@ -1,6 +1,6 @@
 import os
 from datetime import date, timezone
-from config import SOURCES
+from app.config import SOURCES
 
 # -------------------------------------------------------
 # STEP E: DB保存（Supabase）
