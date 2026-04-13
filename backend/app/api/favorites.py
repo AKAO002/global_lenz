@@ -3,7 +3,8 @@ from fastapi import APIRouter, Query
 from app.services.favorite_service import (
     get_favorites,
     create_favorite,
-    delete_favorite
+    delete_favorite,
+    get_favorites_with_summaries
 )
 
 from app.schemas.favorite import FavoriteCreate
@@ -39,3 +40,13 @@ def remove_favorite(
     data = delete_favorite(favorite_id)
 
     return data
+
+# フロント用表示用ネタ帳リスト
+@router.get("/with-summaries")
+def read_favorites_with_summaries(
+    user_id: str = Query(...)
+):
+
+    return get_favorites_with_summaries(
+        user_id
+    )
