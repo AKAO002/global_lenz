@@ -2,8 +2,8 @@ import feedparser
 import urllib.parse
 import time
 from googlenewsdecoder import gnewsdecoder
-from config import SOURCES, GOOGLE_SOURCE_FILTERS, MEDIA_DOMAINS
-from logic.ai_service import is_article_relevant
+from app.config import SOURCES, GOOGLE_SOURCE_FILTERS, MEDIA_DOMAINS
+from app.logic.ai_service import is_article_relevant
 
 # -------------------------------------------------------
 # STEP A: トレンド見出し収集
