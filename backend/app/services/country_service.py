@@ -98,3 +98,62 @@ def get_country_detail(country_id: int):
         "url":
             url
     }
+
+def get_home_country_summaries():
+
+    response = (
+        supabase
+        .table("country_summaries")
+        .select(
+            """
+            id,
+            created_at,
+            country_summary,
+            recommend_score,
+
+            topics (
+                topic_name
+            ),
+
+            medias (
+                country_name
+            )
+            """
+        )
+        .order("created_at", desc=True)
+        .limit(20)
+        .execute()
+    )
+
+    data = response.data
+
+    results = []
+
+    for row in data:
+
+        results.append({
+
+            "id":
+                row["id"],
+
+            "topic_name":
+                row["topics"]["topic_name"],
+
+            "country_name":
+                row["medias"]["country_name"],
+
+            "summary":
+                row["country_summary"],
+
+            "created_at":
+                row["created_at"],
+
+            "recommend_score":
+                row["recommend_score"]
+
+        })
+
+    return results
+
+
+
