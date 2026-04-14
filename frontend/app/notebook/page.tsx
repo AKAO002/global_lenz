@@ -12,15 +12,13 @@ const initialItems: FavoriteCardProps[] = [
     id: '1',
     title: 'イラン情勢',
     publishedAt: '2026-04-13',
-    hasComparisonSummary: true,
-    hasCountrySummary: false,
+    mediaLine: 'NHK · CNN · BBC · Al Jazeera · DD News',
   },
   {
     id: '2',
     title: 'ドジャース',
     publishedAt: '2026-04-12',
-    hasComparisonSummary: true,
-    hasCountrySummary: true,
+    mediaLine: 'NHK · CNN · BBC',
   },
 ];
 
@@ -56,13 +54,13 @@ export default function NotebookPage() {
   return (
     <RequireAuth>
       <div className="relative min-h-screen bg-brand-canvas p-4 pb-28">
-        <div className="flex-1">
-          <h1 className="mb-4 text-xl font-bold text-brand-text">ネタ帳</h1>
+        <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col">
+          <h1 className="mb-5 text-xl font-bold tracking-tight text-brand-text">ネタ帳</h1>
 
           {isEmpty ? (
             <EmptyState />
           ) : (
-            <ul className="grid gap-3 sm:grid-cols-2">
+            <ul className="flex flex-col gap-3">
               {items.map((item) => (
                 <li key={item.id}>
                   <FavoriteCard
@@ -76,7 +74,7 @@ export default function NotebookPage() {
           )}
         </div>
 
-        <div className="mt-6">
+        <div className="mx-auto mt-8 w-full max-w-2xl">
           <button
             type="button"
             onClick={handleLogout}

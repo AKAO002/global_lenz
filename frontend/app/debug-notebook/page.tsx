@@ -9,22 +9,19 @@ const mockItems: FavoriteCardProps[] = [
     id: 'd1',
     title: 'イラン情勢の比較要約',
     publishedAt: '2026-04-13',
-    hasComparisonSummary: true,
-    hasCountrySummary: false,
+    mediaLine: '日本 · アメリカ · インド · カタール · イギリス',
   },
   {
     id: 'd2',
     title: 'ドジャース報道の国別まとめ',
     publishedAt: '2026-04-12',
-    hasComparisonSummary: true,
-    hasCountrySummary: true,
+    mediaLine: 'アメリカ · イギリス',
   },
   {
     id: 'd3',
     title: '宇宙ゴミ問題と各国の主張',
     publishedAt: '2026-04-11',
-    hasComparisonSummary: false,
-    hasCountrySummary: true,
+    mediaLine: '日本 · アメリカ · インド',
   },
 ];
 
@@ -50,11 +47,11 @@ export default function DebugNotebookPage() {
   };
 
   return (
-    <div className="relative min-h-[100dvh] bg-brand-canvas p-4 pb-28 text-brand-text">
-      <main className="mx-auto max-w-4xl">
+    <div className="relative min-h-[100dvh] bg-brand-canvas p-4 pb-28 text-brand-text sm:px-6">
+      <main className="mx-auto w-full max-w-2xl">
         <header className="mb-5">
-          <h1 className="text-lg font-semibold">ネタ帳（表示確認ページ）</h1>
-          <p className="mt-1 text-sm text-brand-muted">
+          <h1 className="text-lg font-semibold tracking-tight">ネタ帳（表示確認ページ）</h1>
+          <p className="mt-1 text-sm leading-relaxed text-brand-muted">
             カードをタップで複数選択 → 右下の削除で取り除けます。
           </p>
         </header>
@@ -66,7 +63,7 @@ export default function DebugNotebookPage() {
               setItems(mockItems);
               setSelectedIds(new Set());
             }}
-            className="rounded-full border border-brand-border bg-brand-surface px-4 py-2 text-xs font-medium hover:bg-white"
+            className="rounded-full border border-brand-border bg-brand-surface px-4 py-2 text-xs font-medium transition-colors hover:bg-white"
           >
             データあり
           </button>
@@ -76,7 +73,7 @@ export default function DebugNotebookPage() {
               setItems([]);
               setSelectedIds(new Set());
             }}
-            className="rounded-full border border-brand-border bg-brand-surface px-4 py-2 text-xs font-medium hover:bg-white"
+            className="rounded-full border border-brand-border bg-brand-surface px-4 py-2 text-xs font-medium transition-colors hover:bg-white"
           >
             空にする
           </button>
@@ -85,7 +82,7 @@ export default function DebugNotebookPage() {
         {isEmpty ? (
           <EmptyState />
         ) : (
-          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="flex flex-col gap-3">
             {items.map((item) => (
               <li key={item.id}>
                 <FavoriteCard
