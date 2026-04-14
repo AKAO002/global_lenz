@@ -121,7 +121,7 @@ def get_home_country_summaries():
             """
         )
         .order("created_at", desc=True)
-        .limit(20)
+        .limit(5)
         .execute()
     )
 
