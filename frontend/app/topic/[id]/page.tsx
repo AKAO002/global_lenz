@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import RequireAuth from '@/components/RequireAuth';
 import Link from 'next/link';
+import Image from 'next/image';
 
 // 国画像
 const countryNames: { [key: string]: string } = {
@@ -148,13 +149,14 @@ export default function TopicPage({
             {countryNames[topic.media_id]}の記事要約は以下になります。
           </p>
 
-          {/* 画像（国旗などを想定） */}
-          <div className="w-full h-40 flex items-center justify-center p-4">
-            {/* 仮の国旗（画像ファイルがあればそれを表示） */}
-            <img
+          {/* 画像 */}
+          <div className="w-full h-40 flex items-center justify-center p-4 relative">
+            {/* 国旗 */}
+            <Image
               src={flagImages[topic.media_id] || '/images/flag-default.png'}
-              alt="選択国のイメージ"
-              className="h-full object-contain mix-blend-multiply opacity-70"
+              alt="国旗"
+              fill
+              className="object-contain mix-blend-multiply opacity-70"
             />
           </div>
 

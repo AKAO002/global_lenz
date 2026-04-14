@@ -2,19 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 // 国画像
-const countryNames: { [key: string]: string } = {
-  '1': '日本',
-  '9': '日本',
-  '2': 'イギリス',
-  '6': 'イギリス',
-  '3': 'アメリカ',
-  '4': 'インド',
-  '5': 'カタール',
-  '7': 'カタール',
-};
-
 const flagImages: { [key: string]: string } = {
   '1': '/images/JP.png',
   '9': '/images/JP.png',
@@ -101,11 +91,13 @@ export default function HomePage() {
                   {/*  カード部分: relative を設定し、高さを固定  */}
                   <div className="relative rounded-sm overflow-hidden border border-gray-100 h-[170px] flex flex-col group bg-white shadow-sm hover:shadow-md transition-shadow">
                     {/*  背景画像: カード全体に広げ、透過と合成モードを設定  */}
-                    <img
+                    <Image
                       src={
                         flagImages[topic.media_id] || '/images/flag-default.png'
                       }
-                      className="absolute inset-0 w-full h-full object-cover mix-blend-multiply opacity-30"
+                      alt="国旗"
+                      fill
+                      className="object-cover mix-blend-multiply opacity-30"
                     />
 
                     {/* テキストエリア: z-10 で画像の上に重ねる。 bg-white/40 で文字を読みやすく */}
@@ -132,7 +124,7 @@ export default function HomePage() {
 
           <div className="mt-8">
             {/* 渡すのは topic.id (国のID) ではなく、セットのID */}
-            <Link href={`/compare/${todayIssueId}`}>
+            <Link href={`/comparison/${todayIssueId}`}>
               <button className="w-full bg-orange-300 text-black font-bold py-3 rounded-md shadow">
                 5カ国比較要約
               </button>
