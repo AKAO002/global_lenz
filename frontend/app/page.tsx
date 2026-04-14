@@ -6,22 +6,23 @@ import Image from 'next/image';
 
 // 国画像
 const flagImages: { [key: string]: string } = {
-  '1': '/images/JP.png',
-  '9': '/images/JP.png',
-  '2': '/images/UK.png',
-  '6': '/images/UK.png',
-  '3': '/images/US.png',
-  '4': '/images/India.png',
-  '5': '/images/qatar.png',
-  '7': '/images/qatar.png',
+  日本: '/images/JP.png',
+  イギリス: '/images/UK.png',
+  アメリカ: '/images/US.png',
+  インド: '/images/India.png',
+  カタール: '/images/qatar.png',
 };
-// 本日のセットID（実際はDBから取得したり、日付を入れたりします）
-const todayIssueId = '20260413';
+// 本日のセットID
+const today = new Date();
+const todayIssueId =
+  today.getFullYear().toString() +
+  (today.getMonth() + 1).toString().padStart(2, '0') +
+  today.getDate().toString().padStart(2, '0');
 
 export default function HomePage() {
   const [summaries, setSummaries] = useState([]);
-  const [activeTab, setActiveTab] = useState('イラン情勢');
-  const tabs = ['イラン情勢', 'ドジャース', '宇宙ゴミ問題'];
+  const [tabs, setTabs] = useState<string[]>([]);
+  const [activeTab, setActiveTab] = useState('');
 
   useEffect(() => {
     const fetchSummaries = async () => {
@@ -29,10 +30,18 @@ export default function HomePage() {
         const res = await fetch(
           'http://localhost:8000/api/country-summaries/home'
         );
-        console.log('Response status:', res.status); // ここで404が出るか確認
-        if (!res.ok) throw new Error('サーバーエラー');
         const data = await res.json();
+        console.log('取得したデータの中身:', data);
+        if (!res.ok) throw new Error('サーバーエラー');
         setSummaries(data);
+        const dynamicTabs = Array.from(
+          new Set(data.map((item: any) => item.topic_name))
+        ) as string[];
+        setTabs(dynamicTabs);
+
+        if (dynamicTabs.length > 0 && !activeTab) {
+          setActiveTab(dynamicTabs[0]);
+        }
       } catch (err) {
         console.error('通信に失敗しました:', err);
       }
@@ -45,7 +54,13 @@ export default function HomePage() {
       <div className="max-w-md mx-auto min-h-screen bg-white shadow-lg relative">
         {/* 1. 日付ヘッダー */}
         <header className="p-6 text-center">
-          <h1 className="text-2xl font-bold text-gray-800">4月3日（金）</h1>
+          <h1 className="text-2xl font-bold text-gray-800">
+            {new Date().toLocaleDateString('ja-JP', {
+              month: 'numeric',
+              day: 'numeric',
+              weekday: 'short',
+            })}
+          </h1>
         </header>
 
         {/* 2. 上部タブ */}
@@ -76,50 +91,53 @@ export default function HomePage() {
           {/* 3. 2カラムのカードレイアウト */}
           <div className="grid grid-cols-2 gap-4 px-1">
             {summaries &&
-              summaries.map((topic: any) => (
-                <div key={topic.id} className="flex flex-col">
-                  {/* 国名と星評価 */}
-                  <div className="flex items-center gap-1 mb-1.5 ml-0.5">
-                    <span className="text-[11px] font-bold text-gray-800">
-                      {topic.country_name}：
-                    </span>
-                    <span className="text-[11px] text-yellow-500 tracking-tighter">
-                      {'★'.repeat(topic.recommend_score || 0)}
-                    </span>
-                  </div>
+              summaries
+                .filter((topic: any) => topic.topic_name === activeTab)
+                .map((topic: any) => (
+                  <div key={topic.id} className="flex flex-col">
+                    {/* 国名と星評価 */}
+                    <div className="flex items-center gap-1 mb-1.5 ml-0.5">
+                      <span className="text-[11px] font-bold text-gray-800">
+                        {topic.country_name}：
+                      </span>
+                      <span className="text-[11px] text-yellow-500 tracking-tighter">
+                        {'★'.repeat(topic.recommend_score || 0)}
+                      </span>
+                    </div>
 
-                  {/*  カード部分: relative を設定し、高さを固定  */}
-                  <div className="relative rounded-sm overflow-hidden border border-gray-100 h-[170px] flex flex-col group bg-white shadow-sm hover:shadow-md transition-shadow">
-                    {/*  背景画像: カード全体に広げ、透過と合成モードを設定  */}
-                    <Image
-                      src={
-                        flagImages[topic.media_id] || '/images/flag-default.png'
-                      }
-                      alt="国旗"
-                      fill
-                      className="object-cover mix-blend-multiply opacity-30"
-                    />
+                    {/*  カード部分: relative を設定し、高さを固定  */}
+                    <div className="relative rounded-sm overflow-hidden border border-gray-100 h-[170px] flex flex-col group bg-white shadow-sm hover:shadow-md transition-shadow">
+                      {/*  背景画像: カード全体に広げ、透過と合成モードを設定  */}
+                      {flagImages[topic.country_name] && (
+                        <Image
+                          src={flagImages[topic.country_name]}
+                          alt={topic.country_name}
+                          fill
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          className="object-cover mix-blend-multiply opacity-30"
+                        />
+                      )}
 
-                    {/* テキストエリア: z-10 で画像の上に重ねる。 bg-white/40 で文字を読みやすく */}
-                    <div className="relative z-10 p-3 h-full flex flex-col justify-between bg-white/40">
-                      {/* テキスト: line-clamp で行数を制限 */}
-                      <p className="text-sm leading-relaxed text-gray-900 font-bold">
-                        {topic.country_summary?.length > 30
-                          ? topic.country_summary.substring(0, 30) + '...'
-                          : topic.country_summary || 'サマリーがありません'}
-                      </p>
+                      {/* テキストエリア: z-10 で画像の上に重ねる。 bg-white/40 で文字を読みやすく */}
+                      <div className="relative z-10 p-3 h-full flex flex-col justify-between bg-white/40">
+                        {/* テキスト: line-clamp で行数を制限 */}
+                        <p className="text-sm leading-relaxed text-gray-900 font-bold">
+                          {topic.summary?.length > 30
+                            ? topic.summary.substring(0, 30) + '...'
+                            : topic.summary || 'サマリーがありません'}
+                        </p>
 
-                      {/* ...もっと見る: 絶対配置 (absolute) で右下に固定。背景を敷いて文字と被っても読めるように */}
-                      <Link
-                        href={`/topic/${topic.id}`}
-                        className="absolute bottom-1 right-2 text-[10px] text-gray-500 underline font-semibold bg-white/70 px-1.5 py-0.5 rounded-sm"
-                      >
-                        ...もっと見る
-                      </Link>
+                        {/* ...もっと見る: 絶対配置 (absolute) で右下に固定。背景を敷いて文字と被っても読めるように */}
+                        <Link
+                          href={`/topic/${topic.id}`}
+                          className="absolute bottom-1 right-2 text-[10px] text-gray-500 underline font-semibold bg-white/70 px-1.5 py-0.5 rounded-sm"
+                        >
+                          ...もっと見る
+                        </Link>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
           </div>
 
           <div className="mt-8">

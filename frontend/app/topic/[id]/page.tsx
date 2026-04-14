@@ -8,26 +8,12 @@ import Link from 'next/link';
 import Image from 'next/image';
 
 // 国画像
-const countryNames: { [key: string]: string } = {
-  '1': '日本',
-  '9': '日本',
-  '2': 'イギリス',
-  '6': 'イギリス',
-  '3': 'アメリカ',
-  '4': 'インド',
-  '5': 'カタール',
-  '7': 'カタール',
-};
-
 const flagImages: { [key: string]: string } = {
-  '1': '/images/JP.png',
-  '9': '/images/JP.png',
-  '2': '/images/UK.png',
-  '6': '/images/UK.png',
-  '3': '/images/US.png',
-  '4': '/images/India.png',
-  '5': '/images/qatar.png',
-  '7': '/images/qatar.png',
+  日本: '/images/JP.png',
+  イギリス: '/images/UK.png',
+  アメリカ: '/images/US.png',
+  インド: '/images/India.png',
+  カタール: '/images/qatar.png',
 };
 
 export default function TopicPage({
@@ -45,12 +31,13 @@ export default function TopicPage({
     async function fetchTopic() {
       setLoading(true);
       try {
-        const apiUrl = `/api/country-summaries/${id}/detail`;
+        const apiUrl = `http://localhost:8000/api/country-summaries/${id}/detail`;
         const res = await fetch(apiUrl);
         if (!res.ok) throw new Error('データの取得に失敗しました');
         const data = await res.json();
+        console.log('詳細データ受信:', data);
 
-        if (Array.isArray(data) && data.length > 0) {
+        if (data && typeof data === 'object') {
           setTopic(data);
         } else {
           setTopic(null);
@@ -146,23 +133,26 @@ export default function TopicPage({
         {/* 要約テキスト */}
         <div className="space-y-6">
           <p className="text-center font-bold mb-6">
-            {countryNames[topic.media_id]}の記事要約は以下になります。
+            {topic.country_name}の記事要約は以下になります。
           </p>
 
           {/* 画像 */}
           <div className="w-full h-40 flex items-center justify-center p-4 relative">
             {/* 国旗 */}
-            <Image
-              src={flagImages[topic.media_id] || '/images/flag-default.png'}
-              alt="国旗"
-              fill
-              className="object-contain mix-blend-multiply opacity-70"
-            />
+            {flagImages[topic.country_name] && (
+              <Image
+                src={flagImages[topic.country_name]}
+                alt={topic.country_name}
+                fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                className="object-contain mix-blend-multiply opacity-70"
+              />
+            )}{' '}
           </div>
 
           {/* 要約本文 */}
           <p className="text-sm leading-relaxed tracking-wider">
-            {topic.country_summary}
+            {topic.summary}
           </p>
 
           {/* 引用元 */}
