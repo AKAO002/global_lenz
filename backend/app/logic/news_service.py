@@ -4,6 +4,10 @@ import time
 from googlenewsdecoder import gnewsdecoder
 from config import SOURCES, GOOGLE_SOURCE_FILTERS, MEDIA_DOMAINS
 from logic.ai_service import is_article_relevant
+from cache.redis_client import (
+    make_cache_key, cache_get, cache_set,
+    TTL_GOOGLE_NEWS, TTL_URL_DECODE,
+)
 
 # -------------------------------------------------------
 # STEP A: トレンド見出し収集
@@ -37,7 +41,6 @@ def fetch_nhk_article(query_ja):
         return None
 
     keywords = query_ja.replace("　", " ").split()
-
     and_match = None   # 全キーワード一致した最初の記事
     or_match  = None   # いずれか1語一致した最初の記事
 
@@ -45,7 +48,6 @@ def fetch_nhk_article(query_ja):
         title   = entry.get("title", "")
         summary = entry.get("summary", "")
         text    = title + summary
-
         matched = [kw for kw in keywords if kw in text]
         if len(matched) == len(keywords):
             # 全キーワード一致 → 即採用
@@ -71,12 +73,23 @@ def fetch_nhk_article(query_ja):
 
 
 def _decode_url(long_url):
-    """GoogleニュースのリダイレクトURLを元のURLに変換する"""
+    """
+    GoogleニュースのリダイレクトURLを元のURLに変換する。
+    同じURLは24時間キャッシュする。
+    """
+    key = make_cache_key("url_decode", long_url)
+    cached = cache_get(key)
+    if cached:
+        return cached
+
     try:
         decoded = gnewsdecoder(long_url)
-        return decoded["decoded_url"] if decoded.get("status") else long_url
+        final_url = decoded["decoded_url"] if decoded.get("status") else long_url
     except Exception:
-        return long_url
+        final_url = long_url
+
+    cache_set(key, final_url, TTL_URL_DECODE)
+    return final_url
 
 def _entry_to_dict(entry, media_key):
     """feedparserのエントリを辞書に変換する"""
@@ -99,12 +112,20 @@ def _is_expected_source(result, media_key):
 def fetch_google_news_article(media_key, query_en, topic_name):
     """
     GoogleニュースRSSから記事を1件取得する。
+    同じ media_key + query_en の組み合わせは2時間キャッシュする。
 
     戦略:
     1. ソースフィルター付きで検索 → ヒットしたらそのまま返す
     2. フィルターなしで上位5件取得 → 期待ドメイン一致 かつ 関連性チェックOKの記事を採用
     3. 一致する記事がなければ None を返す（別メディアの記事を誤って採用しない）
     """
+    # --- キャッシュ確認 ---
+    key = make_cache_key("gnews", media_key, query_en)
+    cached = cache_get(key)
+    if cached:
+        print(f"  [{media_key}] キャッシュヒット: {query_en!r}")
+        return cached
+
     source_filter = GOOGLE_SOURCE_FILTERS.get(media_key, "")
     time_filter = "when:7d"
 
@@ -114,7 +135,9 @@ def fetch_google_news_article(media_key, query_en, topic_name):
         url = f"https://news.google.com/rss/search?q={encoded_query}&hl=en-US&gl=US&ceid=US:en"
         feed = feedparser.parse(url)
         if not feed.bozo and feed.entries:
-            return _entry_to_dict(feed.entries[0], media_key)
+            result = _entry_to_dict(feed.entries[0], media_key)
+            cache_set(key, result, TTL_GOOGLE_NEWS)
+            return result
         print(f"  [{media_key}] ソースフィルター付き検索でヒットなし → フィルターなしで再試行")
 
     # --- 第2試行: フィルターなし・上位5件からドメイン一致＋関連性チェックで選ぶ ---
@@ -128,9 +151,9 @@ def fetch_google_news_article(media_key, query_en, topic_name):
         candidate = _entry_to_dict(entry, media_key)
         if not _is_expected_source(candidate, media_key):
             continue
-        # ドメイン一致 → さらに関連性チェック
         if is_article_relevant(media_key, topic_name, candidate["title"], query_en):
             print(f"  [{media_key}] フォールバックで適合記事を発見")
+            cache_set(key, candidate, TTL_GOOGLE_NEWS)
             return candidate
         else:
             print(f"  [{media_key}] フォールバック候補が関連性チェックで除外: {candidate['title'][:60]}")
