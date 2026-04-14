@@ -94,7 +94,13 @@ def discover_trending_topics(all_headlines):
         messages=[{"role": "user", "content": prompt}],
         response_format={"type": "json_object"},
     )
-    topics = json.loads(response.choices[0].message.content)["topics"]
+    
+    res_text = response.choices[0].message.content.strip()
+    # Markdownの装飾（```json ... ```）を削る
+    if res_text.startswith("```json"):
+        res_text = res_text.replace("```json", "").replace("```", "").strip()
+
+    topics = json.loads(res_text)["topics"]
 
     if len(topics) != 6:
         print(f"  ⚠️  トピック数が{len(topics)}個です（期待値: 6）")
@@ -166,7 +172,11 @@ def deduplicate_topics(topics):
         messages=[{"role": "user", "content": prompt}],
         response_format={"type": "json_object"},
     )
-    result = json.loads(response.choices[0].message.content)
+    res_text = response.choices[0].message.content.strip()
+    if res_text.startswith("```json"):
+        res_text = res_text.replace("```json", "").replace("```", "").strip()
+
+    result = json.loads(res_text)
     duplicates = result.get("duplicates", [])
 
     if not duplicates:
@@ -350,7 +360,11 @@ def generate_combined_report(topic_name, all_news_content):
         temperature=0.2,
         response_format={"type": "json_object"},
     )
-    return json.loads(response.choices[0].message.content)
+    res_text = response.choices[0].message.content.strip()
+    if res_text.startswith("```json"):
+        res_text = res_text.replace("```json", "").replace("```", "").strip()
+
+    return json.loads(res_text)
 
 def _check_topic_name_consistency(topics):
     """
