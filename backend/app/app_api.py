@@ -8,11 +8,6 @@ from app.api import search
 
 router = APIRouter()
 
-
-@router.get("/")
-def root():
-    return {"message": "Hot Reload確認OK"}
-
 router.include_router(
     country_summaries.router,
     prefix="/api/country-summaries",
