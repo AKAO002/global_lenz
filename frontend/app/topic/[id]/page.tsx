@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import RequireAuth from '@/components/RequireAuth';
@@ -13,7 +13,12 @@ const flagImages: { [key: string]: string } = {
   // ...必要に応じて追加
 };
 
-export default function TopicPage({ params }: { params: { id: string } }) {
+export default function TopicPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = React.use(params);
   const router = useRouter();
   const [topic, setTopic] = useState<any>(null); // 本来は型を定義する
   const [loading, setLoading] = useState(true);
@@ -36,7 +41,7 @@ export default function TopicPage({ params }: { params: { id: string } }) {
       setLoading(false);
     }
     fetchTopic();
-  }, [params.id]);
+  }, [id]);
 
   // ログアウト処理
   const handleLogout = async () => {
@@ -61,7 +66,7 @@ export default function TopicPage({ params }: { params: { id: string } }) {
     // 保存データをSupabaseにインサート (テーブル名は仮に'favorites')
     const { error } = await supabase.from('favorites').insert({
       user_id: user.id,
-      topic_id: params.id,
+      topic_id: id,
       topic_title: topic?.title,
       description_snapshot: topic?.description,
       // ...他の必要な情報
@@ -122,7 +127,7 @@ export default function TopicPage({ params }: { params: { id: string } }) {
           <div className="w-full h-40 flex items-center justify-center p-4">
             {/* 仮の国旗（画像ファイルがあればそれを表示） */}
             <img
-              src={flagImages[params.id] || '/images/flag-default.png'}
+              src={flagImages[id] || '/images/flag-default.png'}
               alt="選択国のイメージ"
               className="h-full object-contain mix-blend-multiply opacity-70"
             />
