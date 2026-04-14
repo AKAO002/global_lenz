@@ -131,7 +131,7 @@ def save_to_db(supabase, topic_name, media_results, report):
             "topic_id":        topic_id,
             "media_id":        media_id,
             "summary_date":    today,
-            "ccountry_summary": cs.get("summary", ""),
+            "country_summary": cs.get("summary", ""),
             "recommend_score": cs.get("recommend_score", 5),
         }).execute()
 
