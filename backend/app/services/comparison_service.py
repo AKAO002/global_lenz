@@ -29,8 +29,6 @@ def get_comparison_summary_by_id(summary_id: int):
 # 比較要約詳細画面の表示
 def get_comparison_detail(comparison_id: int):
 
-    # STEP① comparison + country + media
-
     response = (
         supabase
         .table("comparison_summaries")
