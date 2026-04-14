@@ -1,29 +1,82 @@
 // 5カ国比較要約（非認証）
 'use client';
 
-import React from 'react'; // Reactをインポート
-import Link from 'next/link';
+import React, { useState, useEffect } from 'react';
 
-// paramsの型定義をPromiseに変更
 export default function ComparePage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  // React.use() を使って params の中身を取り出す
   const { id } = React.use(params);
+  const [summaries, setSummaries] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchComparisonData = async () => {
+      try {
+        setLoading(true);
+        // ID（日付など）に基づいたデータを取得
+        const res = await fetch(
+          `http://localhost:8000/api/country-summaries/home`
+        );
+        const data = await res.json();
+
+        if (res.ok) {
+          // 本来はIDで絞り込みますが、一旦全データを入れて表示を確認します
+          setSummaries(data);
+        }
+      } catch (err) {
+        console.error('比較データの取得に失敗しました:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchComparisonData();
+  }, [id]);
+
+  if (loading) {
+    return <div className="p-10 text-center">読み込み中...</div>;
+  }
 
   return (
-    <div className="p-6 max-w-md mx-auto">
-      {/* 直接 params.id と書かずに、取り出した id を使う */}
-      <h1 className="text-xl font-bold mb-6">5カ国比較要約 ({id})</h1>
+    <div className="bg-[#FDFBF6] min-h-screen pb-10">
+      <div className="max-w-md mx-auto bg-white min-h-screen shadow-lg p-6">
+        <header className="mb-8 text-center">
+          <h1 className="text-xl font-bold text-gray-800">5カ国比較要約</h1>
+          <p className="text-xs text-gray-500 mt-1">Issue ID: {id}</p>
+        </header>
 
-      <div className="border rounded-lg p-4 bg-orange-50 mb-6 text-center">
-        <p className="text-sm text-gray-600">
-          ID: {id} のニュース比較を表示中
-          <br />
-          （制作中！）
-        </p>
+        {summaries.length > 0 ? (
+          <div className="space-y-6">
+            {summaries.map((topic) => (
+              <div
+                key={topic.id}
+                className="border-l-4 border-orange-300 pl-4 py-1"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="font-bold text-gray-800">
+                    {topic.country_name}
+                  </h2>
+                  <span className="text-yellow-500 text-xs">
+                    {'★'.repeat(topic.recommend_score || 0)}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-700 leading-relaxed">
+                  {topic.summary || '要約データがありません。'}
+                </p>
+                <div className="text-[10px] text-gray-400 mt-2">
+                  トピック: {topic.topic_name}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-20 text-gray-500">
+            比較データが見つかりませんでした。
+          </div>
+        )}
       </div>
     </div>
   );
