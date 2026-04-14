@@ -44,13 +44,13 @@ export default function TopicPage({
     async function fetchTopic() {
       setLoading(true);
       try {
-        const apiUrl = `/api/country-summaries/${id}`;
+        const apiUrl = `/api/country-summaries/${id}/detail`;
         const res = await fetch(apiUrl);
         if (!res.ok) throw new Error('データの取得に失敗しました');
         const data = await res.json();
 
         if (Array.isArray(data) && data.length > 0) {
-          setTopic(data[0]);
+          setTopic(data);
         } else {
           setTopic(null);
         }

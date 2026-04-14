@@ -34,9 +34,20 @@ export default function HomePage() {
   const tabs = ['イラン情勢', 'ドジャース', '宇宙ゴミ問題'];
 
   useEffect(() => {
-    fetch('/api/country-summaries')
-      .then((res) => res.json())
-      .then((data) => setSummaries(data));
+    const fetchSummaries = async () => {
+      try {
+        const res = await fetch(
+          'http://localhost:8000/api/country-summaries/home'
+        );
+        console.log('Response status:', res.status); // ここで404が出るか確認
+        if (!res.ok) throw new Error('サーバーエラー');
+        const data = await res.json();
+        setSummaries(data);
+      } catch (err) {
+        console.error('通信に失敗しました:', err);
+      }
+    };
+    fetchSummaries();
   }, []);
 
   return (
@@ -74,48 +85,49 @@ export default function HomePage() {
 
           {/* 3. 2カラムのカードレイアウト */}
           <div className="grid grid-cols-2 gap-4 px-1">
-            {summaries.map((topic: any) => (
-              <div key={topic.id} className="flex flex-col">
-                {/* 国名と星評価 */}
-                <div className="flex items-center gap-1 mb-1.5 ml-0.5">
-                  <span className="text-[11px] font-bold text-gray-800">
-                    {countryNames[topic.media_id]}：
-                  </span>
-                  <span className="text-[11px] text-yellow-500 tracking-tighter">
-                    {'★'.repeat(topic.recommend_score || 0)}
-                  </span>
-                </div>
+            {summaries &&
+              summaries.map((topic: any) => (
+                <div key={topic.id} className="flex flex-col">
+                  {/* 国名と星評価 */}
+                  <div className="flex items-center gap-1 mb-1.5 ml-0.5">
+                    <span className="text-[11px] font-bold text-gray-800">
+                      {topic.country_name}：
+                    </span>
+                    <span className="text-[11px] text-yellow-500 tracking-tighter">
+                      {'★'.repeat(topic.recommend_score || 0)}
+                    </span>
+                  </div>
 
-                {/*  カード部分: relative を設定し、高さを固定  */}
-                <div className="relative rounded-sm overflow-hidden border border-gray-100 h-[170px] flex flex-col group bg-white shadow-sm hover:shadow-md transition-shadow">
-                  {/*  背景画像: カード全体に広げ、透過と合成モードを設定  */}
-                  <img
-                    src={
-                      flagImages[topic.media_id] || '/images/flag-default.png'
-                    }
-                    className="absolute inset-0 w-full h-full object-cover mix-blend-multiply opacity-30"
-                  />
+                  {/*  カード部分: relative を設定し、高さを固定  */}
+                  <div className="relative rounded-sm overflow-hidden border border-gray-100 h-[170px] flex flex-col group bg-white shadow-sm hover:shadow-md transition-shadow">
+                    {/*  背景画像: カード全体に広げ、透過と合成モードを設定  */}
+                    <img
+                      src={
+                        flagImages[topic.media_id] || '/images/flag-default.png'
+                      }
+                      className="absolute inset-0 w-full h-full object-cover mix-blend-multiply opacity-30"
+                    />
 
-                  {/* テキストエリア: z-10 で画像の上に重ねる。 bg-white/40 で文字を読みやすく */}
-                  <div className="relative z-10 p-3 h-full flex flex-col justify-between bg-white/40">
-                    {/* テキスト: line-clamp で行数を制限 */}
-                    <p className="text-sm leading-relaxed text-gray-900 font-bold">
-                      {topic.country_summary.length > 30
-                        ? topic.country_summary.substring(0, 30) + '...'
-                        : topic.country_summary}
-                    </p>
+                    {/* テキストエリア: z-10 で画像の上に重ねる。 bg-white/40 で文字を読みやすく */}
+                    <div className="relative z-10 p-3 h-full flex flex-col justify-between bg-white/40">
+                      {/* テキスト: line-clamp で行数を制限 */}
+                      <p className="text-sm leading-relaxed text-gray-900 font-bold">
+                        {topic.country_summary?.length > 30
+                          ? topic.country_summary.substring(0, 30) + '...'
+                          : topic.country_summary || 'サマリーがありません'}
+                      </p>
 
-                    {/* ...もっと見る: 絶対配置 (absolute) で右下に固定。背景を敷いて文字と被っても読めるように */}
-                    <Link
-                      href={`/topic/${topic.id}`}
-                      className="absolute bottom-1 right-2 text-[10px] text-gray-500 underline font-semibold bg-white/70 px-1.5 py-0.5 rounded-sm"
-                    >
-                      ...もっと見る
-                    </Link>
+                      {/* ...もっと見る: 絶対配置 (absolute) で右下に固定。背景を敷いて文字と被っても読めるように */}
+                      <Link
+                        href={`/topic/${topic.id}`}
+                        className="absolute bottom-1 right-2 text-[10px] text-gray-500 underline font-semibold bg-white/70 px-1.5 py-0.5 rounded-sm"
+                      >
+                        ...もっと見る
+                      </Link>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
           </div>
 
           <div className="mt-8">
