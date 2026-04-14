@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { Suspense, useState } from 'react';
+import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
-export default function LoginPage() {
+function LoginContent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const searchParams = useSearchParams();
@@ -67,10 +67,18 @@ export default function LoginPage() {
 
       <p className="mt-4 text-sm">
         アカウントがない場合は
-        <a href="/register" className="text-blue-600 ml-1">
+        <Link href="/register" className="ml-1 text-blue-600">
           新規登録
-        </a>
+        </Link>
       </p>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="mx-auto mt-10 max-w-md">読み込み中...</div>}>
+      <LoginContent />
+    </Suspense>
   );
 }
