@@ -25,7 +25,7 @@ def collect_headlines():
         all_headlines += f"--- {info['country']} ---\n" + "\n".join(headlines) + "\n"
     return all_headlines
 
-    # -------------------------------------------------------
+# -------------------------------------------------------
 # STEP C: 各メディアから記事を取得
 # -------------------------------------------------------
 def fetch_nhk_article(query_ja):

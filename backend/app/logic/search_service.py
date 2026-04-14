@@ -50,10 +50,10 @@ def run_search(keyword: str) -> dict:
     ユーザーキーワードから記事取得→要約生成までを実行し結果を返す。
     Redisキャッシュを活用して同じキーワードの再実行を高速化する。
     """
-    from cache.redis_client import make_cache_key, cache_get, cache_set, TTL_SEARCH_RESULT
-    from logic.news_service import fetch_media_articles
-    from logic.ai_service import generate_combined_report
-    from config import SOURCES
+    from app.cache.redis_client import make_cache_key, cache_get, cache_set, TTL_SEARCH_RESULT
+    from app.logic.news_service import fetch_media_articles
+    from app.logic.ai_service import generate_combined_report
+    from app.config import SOURCES
 
     # --- キャッシュ確認 ---
     cache_key = make_cache_key("search", keyword)
