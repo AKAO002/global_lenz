@@ -34,6 +34,7 @@ def get_country_detail(country_id: int):
             media_id,
             created_at,
             country_summary,
+            difficult_word,
 
             topics (
                 topic_name
@@ -91,6 +92,9 @@ def get_country_detail(country_id: int):
 
         "media_name":
             data["medias"]["media_name"],
+        
+        "difficult_word":
+        data["difficult_word"],
 
         "summary":
             data["country_summary"],

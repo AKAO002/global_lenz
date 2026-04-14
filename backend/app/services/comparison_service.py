@@ -39,6 +39,7 @@ def get_comparison_detail(comparison_id: int):
             created_at,
             variance_score,
             comparison_summary,
+            difficult_word,
 
             topics (
                 topic_name,
@@ -122,6 +123,9 @@ def get_comparison_detail(comparison_id: int):
 
         "comparison_summary":
             data["comparison_summary"],
+        
+        "difficult_word":
+        data["difficult_word"],
 
         "country_summaries":
             result_countries
