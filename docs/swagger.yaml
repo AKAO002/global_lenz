@@ -1,0 +1,457 @@
+openapi: 3.0.3
+
+info:
+  title: Global News Summary API
+  description: |
+    各国ニュース要約アプリAPI
+
+    ■ 主機能
+    - 各国要約一覧
+    - 各国要約詳細（認証必要）
+    - 比較要約
+    - ネタ帳（favorites）
+
+    ■ 拡張予定
+    - subscription（購読機能）
+
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8000
+
+tags:
+  - name: CountrySummaries
+  - name: ComparisonSummaries
+  - name: Favorites
+  - name: Subscriptions
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # =========================
+    # 共通
+    # =========================
+
+    DifficultWord:
+      type: object
+      properties:
+        word:
+          type: string
+          example: 関税
+
+        meaning:
+          type: string
+          example: 輸入時に課される税金
+
+    # =========================
+    # Article
+    # =========================
+
+    Article:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 101
+
+        title:
+          type: string
+          example: ホルムズ海峡で緊張高まる
+
+        url:
+          type: string
+          example: https://example.com/article
+
+    # =========================
+    # Country Summaries
+    # =========================
+
+    CountrySummaryListItem:
+      type: object
+      properties:
+        id:
+          type: integer
+
+        topic_id:
+          type: integer
+
+        topic_name:
+          type: string
+
+        media_id:
+          type: integer
+
+        country_name:
+          type: string
+
+        summary_date:
+          type: string
+          format: date
+
+        recommend_score:
+          type: integer
+
+        summary_preview:
+          type: string
+
+    CountrySummaryDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+
+        topic_name:
+          type: string
+
+        country_name:
+          type: string
+
+        summary_date:
+          type: string
+          format: date
+
+        recommend_score:
+          type: integer
+
+        country_summary_text:
+          type: string
+
+        difficult_words:
+          type: array
+          items:
+            $ref: "#/components/schemas/DifficultWord"
+
+        articles:
+          type: array
+          items:
+            $ref: "#/components/schemas/Article"
+
+    # =========================
+    # Comparison
+    # =========================
+
+    ComparisonSummaryListItem:
+      type: object
+      properties:
+        id:
+          type: integer
+
+        topic_id:
+          type: integer
+
+        topic_name:
+          type: string
+
+        summary_date:
+          type: string
+          format: date
+
+        variance_score:
+          type: integer
+
+    ComparisonSummaryDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+
+        topic_name:
+          type: string
+
+        summary_date:
+          type: string
+          format: date
+
+        variance_score:
+          type: integer
+
+        comparison_summary_text:
+          type: string
+
+        difficult_words:
+          type: array
+          items:
+            $ref: "#/components/schemas/DifficultWord"
+
+        articles:
+          type: array
+          items:
+            $ref: "#/components/schemas/Article"
+
+    # =========================
+    # Favorites
+    # =========================
+
+    Favorite:
+      type: object
+      properties:
+        id:
+          type: integer
+
+        country_summary_id:
+          type: integer
+          nullable: true
+
+        comparison_summary_id:
+          type: integer
+          nullable: true
+
+        created_at:
+          type: string
+          format: date-time
+
+    # =========================
+    # Subscriptions（将来拡張）
+    # =========================
+
+    Subscription:
+      type: object
+      properties:
+        id:
+          type: integer
+
+        user_id:
+          type: string
+
+        status:
+          type: string
+          example: active
+
+        created_at:
+          type: string
+          format: date-time
+
+paths:
+  # =========================
+  # Country List
+  # =========================
+
+  /api/country-summaries:
+    get:
+      tags:
+        - CountrySummaries
+      summary: 各国要約一覧取得
+
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            example: 1
+
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            example: 20
+
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum:
+              - recommend_score
+              - created_at
+
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CountrySummaryListItem"
+
+  # =========================
+  # Country Detail（認証必要）
+  # =========================
+
+  /api/country-summaries/{id}:
+    get:
+      tags:
+        - CountrySummaries
+      summary: 各国要約詳細取得
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CountrySummaryDetail"
+
+        "401":
+          description: 認証エラー
+
+  # =========================
+  # Comparison List
+  # =========================
+
+  /api/comparison-summaries:
+    get:
+      tags:
+        - ComparisonSummaries
+      summary: 比較要約一覧取得
+
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ComparisonSummaryListItem"
+
+  # =========================
+  # Comparison Detail
+  # =========================
+
+  /api/comparison-summaries/{id}:
+    get:
+      tags:
+        - ComparisonSummaries
+      summary: 比較要約詳細取得
+
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ComparisonSummaryDetail"
+
+  # =========================
+  # Favorites
+  # =========================
+
+  /api/favorites:
+    get:
+      tags:
+        - Favorites
+      summary: ネタ帳一覧取得
+      security:
+        - bearerAuth: []
+
+      responses:
+        "200":
+          description: 成功
+
+    post:
+      tags:
+        - Favorites
+      summary: ネタ帳登録
+      security:
+        - bearerAuth: []
+
+      requestBody:
+        required: true
+
+        content:
+          application/json:
+            schema:
+              type: object
+
+              properties:
+                country_summary_id:
+                  type: integer
+                  nullable: true
+
+                comparison_summary_id:
+                  type: integer
+                  nullable: true
+
+      responses:
+        "201":
+          description: 登録成功
+
+  # =========================
+  # Favorite Delete
+  # =========================
+
+  /api/favorites/{id}:
+    delete:
+      tags:
+        - Favorites
+      summary: ネタ帳削除
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+
+      responses:
+        "200":
+          description: 削除成功
+
+  # =========================
+  # Subscriptions（将来拡張）
+  # =========================
+
+  /api/subscriptions:
+    get:
+      tags:
+        - Subscriptions
+      summary: 購読一覧取得（将来機能）
+      security:
+        - bearerAuth: []
+
+      responses:
+        "200":
+          description: 成功
+
+    post:
+      tags:
+        - Subscriptions
+      summary: 購読登録（将来機能）
+      security:
+        - bearerAuth: []
+
+      responses:
+        "201":
+          description: 登録成功
+
+  /api/subscriptions/{id}:
+    delete:
+      tags:
+        - Subscriptions
+      summary: 購読削除（将来機能）
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+
+      responses:
+        "200":
+          description: 削除成功

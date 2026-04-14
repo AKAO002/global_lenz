@@ -2,9 +2,9 @@ import feedparser
 import urllib.parse
 import time
 from googlenewsdecoder import gnewsdecoder
-from config import SOURCES, GOOGLE_SOURCE_FILTERS, MEDIA_DOMAINS
-from logic.ai_service import is_article_relevant
-from cache.redis_client import (
+from app.config import SOURCES, GOOGLE_SOURCE_FILTERS, MEDIA_DOMAINS
+from app.logic.ai_service import is_article_relevant
+from app.cache.redis_client import (
     make_cache_key, cache_get, cache_set,
     TTL_GOOGLE_NEWS, TTL_URL_DECODE,
 )
