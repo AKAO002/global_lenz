@@ -21,3 +21,80 @@ def get_country_summary_by_id(summary_id: int):
     ).execute()
 
     return response.data
+
+def get_country_detail(country_id: int):
+
+    response = (
+        supabase
+        .table("country_summaries")
+        .select(
+            """
+            id,
+            topic_id,
+            media_id,
+            created_at,
+            country_summary,
+
+            topics (
+                topic_name
+            ),
+
+            medias (
+                country_name,
+                media_name
+            )
+            """
+        )
+        .eq("id", country_id)
+        .single()
+        .execute()
+    )
+
+    data = response.data
+
+    if not data:
+        return None
+
+    topic_id = data["topic_id"]
+    media_id = data["media_id"]
+
+    # article URL取得
+
+    article_res = (
+        supabase
+        .table("articles")
+        .select("url")
+        .eq("topic_id", topic_id)
+        .eq("media_id", media_id)
+        .limit(1)
+        .execute()
+    )
+
+    url = None
+
+    if article_res.data:
+        url = article_res.data[0]["url"]
+
+    return {
+
+        "country_id":
+            data["id"],
+
+        "created_at":
+            data["created_at"],
+
+        "topic_name":
+            data["topics"]["topic_name"],
+
+        "country_name":
+            data["medias"]["country_name"],
+
+        "media_name":
+            data["medias"]["media_name"],
+
+        "summary":
+            data["country_summary"],
+
+        "url":
+            url
+    }

@@ -1,8 +1,9 @@
-from fastapi import APIRouter
+from fastapi import APIRouter,HTTPException
 
 from app.services.country_service import (
     get_country_summaries,
-    get_country_summary_by_id 
+    get_country_summary_by_id,
+    get_country_detail
 )
 
 router = APIRouter()
@@ -21,3 +22,16 @@ def read_country_summary(summary_id: int):
         return {"message": "データが見つかりません"}
 
     return data
+
+@router.get("/{id}/detail")
+def read_country_detail(id: int):
+
+    result = get_country_detail(id)
+
+    if not result:
+        raise HTTPException(
+            status_code=404,
+            detail="Country summary not found"
+        )
+
+    return result
