@@ -1,11 +1,15 @@
 from fastapi import FastAPI
 import time
-from config import SOURCES
-from logic.news_service import collect_headlines, fetch_media_articles
-from logic.ai_service import discover_trending_topics, generate_combined_report
-from db.repository import get_supabase_client, save_to_db
+from app.config import SOURCES
+from app.logic.news_service import collect_headlines, fetch_media_articles
+from app.logic.ai_service import discover_trending_topics, generate_combined_report
+from app.db.repository import get_supabase_client, save_to_db
+
+from app.app_api import router as api_router
 
 app = FastAPI()
+
+app.include_router(api_router)
 
 
 @app.get("/")
