@@ -160,7 +160,9 @@ def save_to_db(supabase, topic_name, media_results, report):
         "difficult_word":    comp.get("difficult_word", []),
     }).execute()
 
-    comp_id = comp_res.data[0]["id"] if comp_res.data else None
+    comp_id = None
+    if comp_res.data and len(comp_res.data) > 0:
+        comp_id = comp_res.data[0].get("id")
 
     # comparison_summary_articles: 取得できた記事をすべて紐付け
     if comp_id:
