@@ -1,7 +1,6 @@
 import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
-// import Header from '@/components/header';
-import Footer from '@/components/footer';
+import LayoutClientShell from '@/components/layout/LayoutClientShell';
 
 export const metadata = {
   title: 'Global Lenz',
@@ -17,9 +16,7 @@ export default function RootLayout({
     <html lang="ja">
       <body className="flex flex-col min-h-screen">
         <AuthProvider>
-          {/* <Header /> */}
-          <main className="flex-1 p-6 pb-20">{children}</main>
-          <Footer />
+          <LayoutClientShell>{children}</LayoutClientShell>
         </AuthProvider>
       </body>
     </html>
