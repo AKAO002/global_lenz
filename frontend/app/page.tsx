@@ -1,58 +1,43 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
-// ダミーデータ
-const topics = [
-  {
-    id: 1,
-    title: '日本',
-    country: '日本',
-    stars: '★★★★',
-    image: '/images/JP.png',
-    text: 'ホルムズ海峡の緊迫による原油高（燃料費30%増の試算）と国内物価への...',
-  },
-  {
-    id: 2,
-    title: 'アメリカ',
-    country: 'アメリカ',
-    stars: '★★★★',
-    image: '/images/US.png',
-    text: '最新の経済指標と雇用統計の結果を受け、FRBの方針が注目されています...',
-  },
-  {
-    id: 3,
-    title: 'イギリス',
-    country: 'イギリス',
-    stars: '★★★',
-    image: '/images/UK.png',
-    text: 'ホルムズ海峡の緊迫による原油高（燃料費30%増の試算）と国内物価への...',
-  },
-  {
-    id: 4,
-    title: 'カタール',
-    country: 'カタール',
-    stars: '★★★★★',
-    image: '/images/qatar.png',
-    text: 'ホルムズ海峡の緊迫による原油高（燃料費30%増の試算）と国内物価への...',
-  },
-  {
-    id: 5,
-    title: 'インド',
-    country: 'インド',
-    stars: '★★★★',
-    image: '/images/India.png',
-    text: 'ホルムズ海峡の緊迫による原油高（燃料費30%増の試算）と国内物価への...',
-  },
-];
+// 国画像
+const countryNames: { [key: string]: string } = {
+  '1': '日本',
+  '9': '日本',
+  '2': 'イギリス',
+  '6': 'イギリス',
+  '3': 'アメリカ',
+  '4': 'インド',
+  '5': 'カタール',
+  '7': 'カタール',
+};
 
+const flagImages: { [key: string]: string } = {
+  '1': '/images/JP.png',
+  '9': '/images/JP.png',
+  '2': '/images/UK.png',
+  '6': '/images/UK.png',
+  '3': '/images/US.png',
+  '4': '/images/India.png',
+  '5': '/images/qatar.png',
+  '7': '/images/qatar.png',
+};
 // 本日のセットID（実際はDBから取得したり、日付を入れたりします）
 const todayIssueId = '20260413';
 
 export default function HomePage() {
+  const [summaries, setSummaries] = useState([]);
   const [activeTab, setActiveTab] = useState('イラン情勢');
   const tabs = ['イラン情勢', 'ドジャース', '宇宙ゴミ問題'];
+
+  useEffect(() => {
+    fetch('/api/country-summaries')
+      .then((res) => res.json())
+      .then((data) => setSummaries(data));
+  }, []);
 
   return (
     <div className="bg-[#FDFBF6] min-h-screen pb-24">
@@ -89,33 +74,35 @@ export default function HomePage() {
 
           {/* 3. 2カラムのカードレイアウト */}
           <div className="grid grid-cols-2 gap-4 px-1">
-            {topics.map((topic) => (
+            {summaries.map((topic: any) => (
               <div key={topic.id} className="flex flex-col">
                 {/* 国名と星評価 */}
                 <div className="flex items-center gap-1 mb-1.5 ml-0.5">
                   <span className="text-[11px] font-bold text-gray-800">
-                    {topic.country}：
+                    {countryNames[topic.media_id]}：
                   </span>
                   <span className="text-[11px] text-yellow-500 tracking-tighter">
-                    {topic.stars}
+                    {'★'.repeat(topic.recommend_score || 0)}
                   </span>
                 </div>
 
-                {/* ✨ カード部分: relative を設定し、高さを固定 ✨ */}
+                {/*  カード部分: relative を設定し、高さを固定  */}
                 <div className="relative rounded-sm overflow-hidden border border-gray-100 h-[170px] flex flex-col group bg-white shadow-sm hover:shadow-md transition-shadow">
-                  {/* ✨ 背景画像: カード全体に広げ、透過と合成モードを設定 ✨ */}
+                  {/*  背景画像: カード全体に広げ、透過と合成モードを設定  */}
                   <img
-                    src={topic.image}
-                    alt={topic.country}
-                    // `mix-blend-multiply` で白背景を消し、`opacity-60` で透過させる
-                    className="absolute inset-0 w-full h-full object-cover object-center mix-blend-multiply opacity-60 z-0"
+                    src={
+                      flagImages[topic.media_id] || '/images/flag-default.png'
+                    }
+                    className="absolute inset-0 w-full h-full object-cover mix-blend-multiply opacity-30"
                   />
 
-                  {/* ✨ テキストエリア: z-10 で画像の上に重ねる。 bg-white/40 で文字を読みやすく ✨ */}
+                  {/* テキストエリア: z-10 で画像の上に重ねる。 bg-white/40 で文字を読みやすく */}
                   <div className="relative z-10 p-3 h-full flex flex-col justify-between bg-white/40">
-                    {/* テキスト: line-clamp で行数を制限し、フォントを少し小さく、太く */}
-                    <p className="text-[10px] leading-relaxed text-gray-900 font-bold line-clamp-6">
-                      {topic.text}
+                    {/* テキスト: line-clamp で行数を制限 */}
+                    <p className="text-sm leading-relaxed text-gray-900 font-bold">
+                      {topic.country_summary.length > 30
+                        ? topic.country_summary.substring(0, 30) + '...'
+                        : topic.country_summary}
                     </p>
 
                     {/* ...もっと見る: 絶対配置 (absolute) で右下に固定。背景を敷いて文字と被っても読めるように */}

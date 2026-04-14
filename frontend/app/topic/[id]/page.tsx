@@ -6,11 +6,27 @@ import { supabase } from '@/lib/supabase';
 import RequireAuth from '@/components/RequireAuth';
 import Link from 'next/link';
 
-// 仮の国旗データ（画像に合わせて）
+// 国画像
+const countryNames: { [key: string]: string } = {
+  '1': '日本',
+  '9': '日本',
+  '2': 'イギリス',
+  '6': 'イギリス',
+  '3': 'アメリカ',
+  '4': 'インド',
+  '5': 'カタール',
+  '7': 'カタール',
+};
+
 const flagImages: { [key: string]: string } = {
-  '1': '/images/flag-japan.png', // 日本
-  '2': '/images/flag-usa.png', // アメリカ
-  // ...必要に応じて追加
+  '1': '/images/JP.png',
+  '9': '/images/JP.png',
+  '2': '/images/UK.png',
+  '6': '/images/UK.png',
+  '3': '/images/US.png',
+  '4': '/images/India.png',
+  '5': '/images/qatar.png',
+  '7': '/images/qatar.png',
 };
 
 export default function TopicPage({
@@ -20,25 +36,29 @@ export default function TopicPage({
 }) {
   const { id } = React.use(params);
   const router = useRouter();
-  const [topic, setTopic] = useState<any>(null); // 本来は型を定義する
+  const [topic, setTopic] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isSaved, setIsSaved] = useState(false); // ネタ帳に保存済みかどうかの状態
 
   useEffect(() => {
-    // IDに基づいてニュースデータを取得する（本来はDBから）
     async function fetchTopic() {
       setLoading(true);
-      // ここでIDを使ったAPIコールを行う想定。今はダミーデータをセット。
-      const dummyData = {
-        date: '4月3日（金）',
-        title: 'イラン情勢',
-        country: '{選択国}',
-        description: `ホルムズ海峡の緊迫による原油高（燃料費30％増の試算）と国内物価への影響を注視。高市総理らによる事態沈静化への積極的なトップ外交や、中東派遣中の海自護衛艦による船舶の安全確保、さらに現地の邦人保護に全力を挙げる政府の動向を連日トップニュースで伝えています。`,
-        source: 'NHK',
-        sourceUrl: 'https://www3.nhk.or.jp/',
-      };
-      setTopic(dummyData);
-      setLoading(false);
+      try {
+        const apiUrl = `/api/country-summaries/${id}`;
+        const res = await fetch(apiUrl);
+        if (!res.ok) throw new Error('データの取得に失敗しました');
+        const data = await res.json();
+
+        if (Array.isArray(data) && data.length > 0) {
+          setTopic(data[0]);
+        } else {
+          setTopic(null);
+        }
+      } catch (error) {
+        console.error('取得失敗:', error);
+      } finally {
+        setLoading(false);
+      }
     }
     fetchTopic();
   }, [id]);
@@ -66,10 +86,7 @@ export default function TopicPage({
     // 保存データをSupabaseにインサート (テーブル名は仮に'favorites')
     const { error } = await supabase.from('favorites').insert({
       user_id: user.id,
-      topic_id: id,
-      topic_title: topic?.title,
-      description_snapshot: topic?.description,
-      // ...他の必要な情報
+      country_summary_id: parseInt(id), // IDを数値に変換
     });
 
     if (error) {
@@ -84,6 +101,14 @@ export default function TopicPage({
     return <div className="p-10 text-center">読み込み中...</div>;
   }
 
+  if (!topic) {
+    return (
+      <div className="p-10 text-center bg-[#FDFBF6] min-h-screen">
+        データが見つかりませんでした。
+      </div>
+    );
+  }
+
   return (
     <RequireAuth>
       {' '}
@@ -92,8 +117,8 @@ export default function TopicPage({
         {/* ヘッダーエリア（日付、タイトル、ネタ帳ボタン） */}
         <div className="flex justify-between items-center mb-10 mt-4">
           <div className="flex gap-6 items-center">
-            <h1 className="text-xl font-bold">{topic?.date}</h1>
-            <h2 className="text-xl font-bold">{topic?.title}</h2>
+            <h1 className="text-xl font-bold">{topic.summary_date}</h1>
+            <h2 className="text-xl font-bold">{topic.topic_name}</h2>
           </div>
           {/* ネタ帳保存ボタン（アイコン） */}
           <button
@@ -120,14 +145,14 @@ export default function TopicPage({
         {/* 要約テキスト */}
         <div className="space-y-6">
           <p className="text-center font-bold mb-6">
-            {topic?.country}の記事要約は以下になります。
+            {countryNames[topic.media_id]}の記事要約は以下になります。
           </p>
 
           {/* 画像（国旗などを想定） */}
           <div className="w-full h-40 flex items-center justify-center p-4">
             {/* 仮の国旗（画像ファイルがあればそれを表示） */}
             <img
-              src={flagImages[id] || '/images/flag-default.png'}
+              src={flagImages[topic.media_id] || '/images/flag-default.png'}
               alt="選択国のイメージ"
               className="h-full object-contain mix-blend-multiply opacity-70"
             />
@@ -135,12 +160,12 @@ export default function TopicPage({
 
           {/* 要約本文 */}
           <p className="text-sm leading-relaxed tracking-wider">
-            {topic?.description}
+            {topic.country_summary}
           </p>
 
           {/* 引用元 */}
           <div className="text-xs text-center mt-12 flex gap-3 justify-center">
-            <span>引用元：{topic?.source}</span>
+            <span>引用元メディア：{topic?.media_id}</span>
             <a
               href={topic?.sourceUrl}
               target="_blank"
@@ -159,26 +184,6 @@ export default function TopicPage({
           >
             ログアウト
           </button>
-        </div>
-        {/* タブバー（app/layout.tsxに共通で置くのが理想ですが、仮で配置） */}
-        <div className="h-20"></div> {/* コンテンツとかぶらないように余白 */}
-        <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-gray-200 p-2 flex justify-around border-t">
-          {/* ホーム、アプリについて、などのアイコンボタン群 */}
-          <div className="text-center">
-            <Link href="/" className="text-sm">
-              🏠
-              <br />
-              ホーム
-            </Link>
-          </div>
-          {/* ...他3つ */}
-          <div className="text-center">
-            <Link href="/notebook" className="text-sm">
-              📝
-              <br />
-              ネタ帳
-            </Link>
-          </div>
         </div>
       </div>
     </RequireAuth>
