@@ -12,19 +12,22 @@ const flagImages: { [key: string]: string } = {
   インド: '/images/India.png',
   カタール: '/images/qatar.png',
 };
-// 本日のセットID
-const today = new Date();
-const todayIssueId =
-  today.getFullYear().toString() +
-  (today.getMonth() + 1).toString().padStart(2, '0') +
-  today.getDate().toString().padStart(2, '0');
 
 export default function HomePage() {
   const [summaries, setSummaries] = useState([]);
   const [tabs, setTabs] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState('');
+  const [todayIssueId, setTodayIssueId] = useState('');
 
   useEffect(() => {
+    // マウント時（ブラウザで動いた時）にだけ日付を計算する// 本日のセットID
+    const today = new Date();
+    const formattedDate =
+      today.getFullYear().toString() +
+      (today.getMonth() + 1).toString().padStart(2, '0') +
+      today.getDate().toString().padStart(2, '0');
+    setTodayIssueId(formattedDate);
+
     const fetchSummaries = async () => {
       try {
         const res = await fetch(
@@ -34,11 +37,14 @@ export default function HomePage() {
         console.log('取得したデータの中身:', data);
         if (!res.ok) throw new Error('サーバーエラー');
         setSummaries(data);
+
+        // タブの動的生成
         const dynamicTabs = Array.from(
           new Set(data.map((item: any) => item.topic_name))
         ) as string[];
         setTabs(dynamicTabs);
 
+        // 最初のタブをセット
         if (dynamicTabs.length > 0 && !activeTab) {
           setActiveTab(dynamicTabs[0]);
         }
@@ -142,11 +148,13 @@ export default function HomePage() {
 
           <div className="mt-8">
             {/* 渡すのは topic.id (国のID) ではなく、セットのID */}
-            <Link href={`/comparison/${todayIssueId}`}>
-              <button className="w-full bg-orange-300 text-black font-bold py-3 rounded-md shadow">
-                5カ国比較要約
-              </button>
-            </Link>
+            {todayIssueId && (
+              <Link href={`/comparison/${todayIssueId}`}>
+                <button className="w-full bg-orange-300 text-black font-bold py-3 rounded-md shadow">
+                  5カ国比較要約
+                </button>
+              </Link>
+            )}
           </div>
         </div>
       </div>
