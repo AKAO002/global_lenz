@@ -40,13 +40,14 @@ export default function HomePage() {
 
         // タブの動的生成
         const dynamicTabs = Array.from(
-          new Set(data.map((item: any) => item.topic_name))
-        ) as string[];
+          new Set(data.map((item: any) => item.topic_name?.trim()))
+        ).filter(Boolean) as string[];
+
         setTabs(dynamicTabs);
 
         // 最初のタブをセット
-        if (dynamicTabs.length > 0 && !activeTab) {
-          setActiveTab(dynamicTabs[0]);
+        if (dynamicTabs.length > 0) {
+          setActiveTab((prev) => prev || dynamicTabs[0]);
         }
       } catch (err) {
         console.error('通信に失敗しました:', err);
@@ -71,9 +72,9 @@ export default function HomePage() {
 
         {/* 2. 上部タブ */}
         <nav className="flex justify-around border-b border-gray-100 mb-4">
-          {tabs.map((tab) => (
+          {tabs.map((tab, index) => (
             <button
-              key={tab}
+              key={`${tab}-${index}`}
               onClick={() => setActiveTab(tab)}
               className={`pb-2 px-2 text-sm font-medium transition-colors ${
                 activeTab === tab
@@ -96,61 +97,68 @@ export default function HomePage() {
 
           {/* 3. 2カラムのカードレイアウト */}
           <div className="grid grid-cols-2 gap-4 px-1">
-            {summaries &&
+            {summaries && summaries.length > 0 ? (
               summaries
-                .filter((topic: any) => topic.topic_name === activeTab)
-                .map((topic: any) => (
-                  <div key={topic.id} className="flex flex-col">
-                    {/* 国名と星評価 */}
-                    <div className="flex items-center gap-1 mb-1.5 ml-0.5">
-                      <span className="text-[11px] font-bold text-gray-800">
-                        {topic.country_name}：
-                      </span>
-                      <span className="text-[11px] text-yellow-500 tracking-tighter">
-                        {'★'.repeat(topic.recommend_score || 0)}
-                      </span>
-                    </div>
+                .filter(
+                  (topic: any) => topic.topic_name?.trim() === activeTab?.trim()
+                )
+                .map((topic: any) =>
+                  topic.summaries?.map((summary: any) => (
+                    <div
+                      key={`${topic.topic_id}-${summary.id}`}
+                      className="flex flex-col"
+                    >
+                      {/* 国名と評価 */}
+                      <div className="flex items-center gap-1 mb-1.5 ml-0.5">
+                        <span className="text-[11px] font-bold text-gray-800">
+                          {summary.country_name}：
+                        </span>
+                        <span className="text-[11px] text-yellow-500 tracking-tighter">
+                          {'★'.repeat(summary.recommend_score || 0)}
+                        </span>
+                      </div>
 
-                    {/*  カード部分: relative を設定し、高さを固定  */}
-                    <div className="relative rounded-sm overflow-hidden border border-gray-100 h-[170px] flex flex-col group bg-white shadow-sm hover:shadow-md transition-shadow">
-                      {/*  背景画像: カード全体に広げ、透過と合成モードを設定  */}
-                      {flagImages[topic.country_name] && (
-                        <Image
-                          src={flagImages[topic.country_name]}
-                          alt={topic.country_name}
-                          fill
-                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                          className="object-cover mix-blend-multiply opacity-30"
-                        />
-                      )}
-
-                      {/* テキストエリア: z-10 で画像の上に重ねる。 bg-white/40 で文字を読みやすく */}
-                      <div className="relative z-10 p-3 h-full flex flex-col justify-between bg-white/40">
-                        {/* テキスト: line-clamp で行数を制限 */}
-                        <p className="text-sm leading-relaxed text-gray-900 font-bold">
-                          {topic.summary?.length > 30
-                            ? topic.summary.substring(0, 30) + '...'
-                            : topic.summary || 'サマリーがありません'}
-                        </p>
-
-                        {/* ...もっと見る: 絶対配置 (absolute) で右下に固定。背景を敷いて文字と被っても読めるように */}
-                        <Link
-                          href={`/topic/${topic.id}`}
-                          className="absolute bottom-1 right-2 text-[10px] text-gray-500 underline font-semibold bg-white/70 px-1.5 py-0.5 rounded-sm"
-                        >
-                          ...もっと見る
-                        </Link>
+                      {/* カード本体 */}
+                      <div className="relative rounded-sm overflow-hidden border border-gray-100 h-[170px] flex flex-col bg-white shadow-sm">
+                        {flagImages[summary.country_name] && (
+                          <Image
+                            src={flagImages[summary.country_name]}
+                            alt={summary.country_name}
+                            fill
+                            className="object-cover mix-blend-multiply opacity-30"
+                          />
+                        )}
+                        <div className="relative z-10 p-3 h-full flex flex-col justify-between bg-white/40">
+                          <p className="text-sm leading-relaxed text-gray-900 font-bold">
+                            {summary.summary?.length > 30
+                              ? summary.summary.substring(0, 30) + '...'
+                              : summary.summary || 'サマリーがありません'}
+                          </p>
+                          <Link
+                            href={`/topic/${summary.id}`}
+                            className="absolute bottom-1 right-2 text-[10px] text-gray-500 underline font-semibold bg-white/70 px-1.5 py-0.5 rounded-sm"
+                          >
+                            ...もっと見る
+                          </Link>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )
+            ) : (
+              <div className="col-span-2 text-center py-10 text-gray-400">
+                読み込み中...
+              </div>
+            )}
           </div>
 
+          {/* 4. 比較ボタン部分 */}
           <div className="mt-8">
-            {/* 渡すのは topic.id (国のID) ではなく、セットのID */}
             {todayIssueId && (
-              <Link href={`/comparison/${todayIssueId}`}>
-                <button className="w-full bg-orange-300 text-black font-bold py-3 rounded-md shadow">
+              <Link
+                href={`/comparison/${todayIssueId}?topic=${encodeURIComponent(activeTab)}`}
+              >
+                <button className="w-full bg-orange-300 text-black font-bold py-3 rounded-md shadow hover:bg-orange-400 transition-colors">
                   5カ国比較要約
                 </button>
               </Link>
