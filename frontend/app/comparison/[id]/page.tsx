@@ -44,9 +44,6 @@ export default function ComparePage() {
       <div className="max-w-md mx-auto bg-white min-h-screen shadow-lg p-6">
         <header className="mb-8 text-center">
           <h1 className="text-xl font-bold text-gray-800">5カ国比較要約</h1>
-          <p className="text-lg font-bold text-orange-600 mt-2">
-            Issue ID: {id}
-          </p>
         </header>
 
         {comparison ? (
