@@ -133,6 +133,7 @@ def save_to_db(supabase, topic_name, media_results, report):
             "summary_date":    today,
             "country_summary": cs.get("summary", ""),
             "recommend_score": cs.get("recommend_score", 5),
+            "difficult_word": cs.get("difficult_word", []),
         }).execute()
 
         cs_id = cs_res.data[0]["id"] if cs_res.data else None

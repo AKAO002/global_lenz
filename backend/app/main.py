@@ -56,19 +56,54 @@ def main():
 
             time.sleep(1)
 
-    # レポート生成（構造化JSON）
+    # 2. AIでレポートを生成
         report = generate_combined_report(topic["name"], combined_content)
 
-    # コンソール出力（全文表示）
+    # 3. 報道がなかった国のデータを補完（★ここが重要）
+        
+        country_summaries_map = {
+            cs["country"]: cs for cs in report.get("country_summaries", [])
+        }
+        full_country_summaries = []
+
+        for media_key, info in SOURCES.items():
+            cs = country_summaries_map.get(info["country"])
+            if not cs:
+            # AIが返さなかった国を補完
+                cs = {
+                    "country": info["country"],
+                    "media_name": info["name"],
+                    "summary": "本トピックに関する報道は確認されませんでした。",
+                    "recommend_score": 1,
+                    "url": "",
+                    "article_title": "",
+                    "difficult_word": []
+                }
+            full_country_summaries.append(cs)
+        
+        # ★ 補完した5カ国分のリストを report 本体に書き戻す
+        report["country_summaries"] = full_country_summaries
+
+        # 4. コンソール出力（全文表示）
         print(f"\n{'='*60}")
         print(f"### TOPIC: {topic['name']} ###")
         print(f"{'='*60}\n")
-
         print("【① 各メディア別の報道内容】\n")
-        for cs in report.get("country_summaries", []):
+
+        # 5カ国分を順番に表示
+        for cs in report["country_summaries"]:
             print(f"--- {cs['country']} ({cs['media_name']}) ---")
             print(f"  要約: {cs['summary']}")
             print(f"  recommend_score: {cs.get('recommend_score', '-')}")
+
+            # --- ここを追加：各国の重要用語を表示 ---
+            country_words = cs.get("difficult_word", [])
+            if country_words:
+                print("  重要用語:")
+                for cw in country_words:
+                    print(f"    ・{cw['term']}：{cw['description']}")
+            # ---------------------------------------
+            
             if cs.get("url"):
                 print(f"  URL: {cs['url']}")
             print()
