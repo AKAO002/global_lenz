@@ -8,12 +8,36 @@ import Link from 'next/link';
 function RegisterContent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect') || '/';
 
   const handleRegister = async () => {
+    // バリデーションチェック
+    setErrorMessage(''); // 一旦クリア
+
+    // 1. メールアドレスの形式チェック
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setErrorMessage('正しいメールアドレスを入力してください');
+      return;
+    }
+
+    // 2. パスワードの長さチェック（例: 8文字以上）
+    if (password.length < 8) {
+      setErrorMessage('パスワードは8文字以上で入力してください');
+      return;
+    }
+
+    // 3. パスワードの一致チェック
+    if (password !== confirmPassword) {
+      setErrorMessage('パスワードが一致しません');
+      return;
+    }
+
     // 新規登録
     const { error } = await supabase.auth.signUp({
       email,
@@ -44,6 +68,13 @@ function RegisterContent() {
     <div className="max-w-md mx-auto mt-10">
       <h2 className="text-2xl font-bold mb-6">新規登録</h2>
 
+      {/* エラーメッセージ表示エリア */}
+      {errorMessage && (
+        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded text-sm">
+          {errorMessage}
+        </div>
+      )}
+
       <div className="mb-4">
         <label className="block mb-1">メールアドレス</label>
         <input
@@ -55,12 +86,23 @@ function RegisterContent() {
       </div>
 
       <div className="mb-4">
-        <label className="block mb-1">パスワード</label>
+        <label className="block mb-1">パスワード（8文字以上）</label>
         <input
           type="password"
           className="w-full border p-2 rounded"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+        />
+      </div>
+
+      {/* パスワード確認入力欄 */}
+      <div className="mb-4">
+        <label className="block mb-1">パスワード（確認用）</label>
+        <input
+          type="password"
+          className="w-full border p-2 rounded"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
         />
       </div>
 
@@ -83,7 +125,9 @@ function RegisterContent() {
 
 export default function RegisterPage() {
   return (
-    <Suspense fallback={<div className="mx-auto mt-10 max-w-md">読み込み中...</div>}>
+    <Suspense
+      fallback={<div className="mx-auto mt-10 max-w-md">読み込み中...</div>}
+    >
       <RegisterContent />
     </Suspense>
   );

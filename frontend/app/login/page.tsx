@@ -8,35 +8,55 @@ import { supabase } from '@/lib/supabase';
 function LoginContent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+
   const searchParams = useSearchParams();
   const router = useRouter();
   const redirect = searchParams.get('redirect') || '/';
   console.log('redirect', redirect);
 
   const handleLogin = async () => {
+    setErrorMessage(''); // エラーを初期化
+    // 🌟 バリデーションチェック
+    if (!email || !password) {
+      setErrorMessage('メールアドレスとパスワードを入力してください');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setErrorMessage('メールアドレスの形式が正しくありません');
+      return;
+    }
+
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      //   console.log('data', data);
-      //   console.log('error', error);
-
       if (error) {
-        alert(error.message);
+        setErrorMessage('メールアドレスまたはパスワードが正しくありません');
         return;
       }
 
       router.push(redirect);
     } catch (error) {
       console.error(error);
+      setErrorMessage('予期せぬエラーが発生しました');
     }
   };
 
   return (
     <div className="max-w-md mx-auto mt-10">
       <h2 className="text-2xl font-bold mb-6">ログイン</h2>
+
+      {/* エラーメッセージ表示 */}
+      {errorMessage && (
+        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded text-sm">
+          {errorMessage}
+        </div>
+      )}
 
       <div className="mb-4">
         <label className="block mb-1">メールアドレス</label>
@@ -77,7 +97,9 @@ function LoginContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="mx-auto mt-10 max-w-md">読み込み中...</div>}>
+    <Suspense
+      fallback={<div className="mx-auto mt-10 max-w-md">読み込み中...</div>}
+    >
       <LoginContent />
     </Suspense>
   );
