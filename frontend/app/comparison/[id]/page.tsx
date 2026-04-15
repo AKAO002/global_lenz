@@ -22,9 +22,13 @@ export default function ComparePage({
         );
         const data = await res.json();
 
-        if (res.ok) {
-          // 本来はIDで絞り込みますが、一旦全データを入れて表示を確認します
-          setSummaries(data);
+        if (res.ok && data.length > 0) {
+          const targetTopic = data[0].topic_name;
+          const filteredData = data.filter(
+            (item: any) => item.topic_name === targetTopic
+          );
+
+          setSummaries(filteredData);
         }
       } catch (err) {
         console.error('比較データの取得に失敗しました:', err);
