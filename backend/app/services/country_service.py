@@ -113,6 +113,9 @@ def get_home_country_summaries():
             id,
             topic_name,
             created_at,
+            comparison_summaries (
+                id
+            ),
 
             country_summaries (
                 id,
@@ -146,12 +149,19 @@ def get_home_country_summaries():
                 "summary": cs["country_summary"],
                 "recommend_score": cs["recommend_score"]
             })
+        
+        comp_id = None
+        if "comparison_summaries" in topic and len(topic["comparison_summaries"]) > 0:
+            # 最初の1件のIDを取得
+            comp_id = topic["comparison_summaries"][0]["id"]
 
         results.append({
 
             "topic_id": topic["id"],
 
             "topic_name": topic["topic_name"],
+
+            "comparison_id": comp_id,
 
             "created_at": topic["created_at"],
 
