@@ -149,7 +149,9 @@ export default function HomePage() {
           <div className="mt-8">
             {/* 渡すのは topic.id (国のID) ではなく、セットのID */}
             {todayIssueId && (
-              <Link href={`/comparison/${todayIssueId}`}>
+              <Link
+                href={`/comparison/${todayIssueId}?topic=${encodeURIComponent(activeTab)}`}
+              >
                 <button className="w-full bg-orange-300 text-black font-bold py-3 rounded-md shadow">
                   5カ国比較要約
                 </button>
