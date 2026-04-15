@@ -2,33 +2,28 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 
-export default function ComparePage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = React.use(params);
-  const [summaries, setSummaries] = useState<any[]>([]);
+export default function ComparePage() {
+  const params = useParams();
+  const id = params?.id as string;
+  const [comparison, setComparison] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!id) return;
+
     const fetchComparisonData = async () => {
       try {
         setLoading(true);
-        // ID（日付など）に基づいたデータを取得
+
         const res = await fetch(
-          `http://localhost:8000/api/country-summaries/home`
+          `http://localhost:8000/api/comparison-summaries/${id}/detail`
         );
         const data = await res.json();
 
-        if (res.ok && data.length > 0) {
-          const targetTopic = data[0].topic_name;
-          const filteredData = data.filter(
-            (item: any) => item.topic_name === targetTopic
-          );
-
-          setSummaries(filteredData);
+        if (res.ok) {
+          setComparison(data);
         }
       } catch (err) {
         console.error('比較データの取得に失敗しました:', err);
@@ -52,29 +47,18 @@ export default function ComparePage({
           <p className="text-xs text-gray-500 mt-1">Issue ID: {id}</p>
         </header>
 
-        {summaries.length > 0 ? (
+        {comparison ? (
           <div className="space-y-6">
-            {summaries.map((topic) => (
-              <div
-                key={topic.id}
-                className="border-l-4 border-orange-300 pl-4 py-1"
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <h2 className="font-bold text-gray-800">
-                    {topic.country_name}
-                  </h2>
-                  <span className="text-yellow-500 text-xs">
-                    {'★'.repeat(topic.recommend_score || 0)}
-                  </span>
-                </div>
-                <p className="text-sm text-gray-700 leading-relaxed">
-                  {topic.summary || '要約データがありません。'}
-                </p>
-                <div className="text-[10px] text-gray-400 mt-2">
-                  トピック: {topic.topic_name}
-                </div>
-              </div>
-            ))}
+            {/* 比較要約 */}
+            <div className="border-l-4 border-orange-300 pl-4 py-2">
+              <h2 className="font-bold text-gray-800 mb-2">
+                {comparison.topic_name}
+              </h2>
+
+              <p className="text-sm text-gray-700 leading-relaxed">
+                {comparison.comparison_summary}
+              </p>
+            </div>
           </div>
         ) : (
           <div className="text-center py-20 text-gray-500">
