@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Depends
+from app.core.auth import get_current_user
 
 from app.services.favorite_service import (
     get_favorites,
@@ -11,8 +12,16 @@ from app.schemas.favorite import FavoriteCreate
 
 router = APIRouter()
 
+# 認証情報取得
+@router.get("/")
+def get_favorites(user=Depends(get_current_user)):
+    return {
+        "user_id": user["id"],
+        "email": user["email"]
+    }
+
 #　ネタ帳を取得
-@router.get("")
+@router.get("/")
 def read_favorites(
     user_id: str = Query(...)
 ):
@@ -20,13 +29,19 @@ def read_favorites(
     return get_favorites(user_id)
 
 #　ネタ帳に登録
-@router.post("")
+@router.post("/")
 def add_favorite(
-    favorite: FavoriteCreate
+    favorite: FavoriteCreate,
+    user=Depends(get_current_user)
 ):
 
+    favorite_data= favorite.dict()
+
+    # JWTからuser_id取得
+    favorite_data["user_id"] = user["id"]
+
     data = create_favorite(
-        favorite.dict()
+        favorite_data
     )
 
     return data

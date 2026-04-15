@@ -7,3 +7,5 @@ openai
 supabase
 psycopg2-binary
 googlenewsdecoder
+httpx
+python-jose[cryptography]
