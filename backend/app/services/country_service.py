@@ -107,25 +107,26 @@ def get_home_country_summaries():
 
     response = (
         supabase
-        .table("country_summaries")
+        .table("topics")
         .select(
             """
             id,
+            topic_name,
             created_at,
-            country_summary,
-            recommend_score,
 
-            topics (
-                topic_name
-            ),
+            country_summaries (
+                id,
+                country_summary,
+                recommend_score,
 
-            medias (
-                country_name
+                medias (
+                    country_name
+                )
             )
             """
         )
         .order("created_at", desc=True)
-        .limit(5)
+        .limit(6)
         .execute()
     )
 
@@ -133,31 +134,29 @@ def get_home_country_summaries():
 
     results = []
 
-    for row in data:
+    for topic in data:
+
+        summaries = []
+
+        for cs in topic["country_summaries"]:
+
+            summaries.append({
+                "id": cs["id"],
+                "country_name": cs["medias"]["country_name"],
+                "summary": cs["country_summary"],
+                "recommend_score": cs["recommend_score"]
+            })
 
         results.append({
 
-            "id":
-                row["id"],
+            "topic_id": topic["id"],
 
-            "topic_name":
-                row["topics"]["topic_name"],
+            "topic_name": topic["topic_name"],
 
-            "country_name":
-                row["medias"]["country_name"],
+            "created_at": topic["created_at"],
 
-            "summary":
-                row["country_summary"],
-
-            "created_at":
-                row["created_at"],
-
-            "recommend_score":
-                row["recommend_score"]
+            "summaries": summaries
 
         })
 
     return results
-
-
-
