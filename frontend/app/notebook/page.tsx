@@ -1,37 +1,41 @@
+// ネタ帳
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import RequireAuth from '@/components/RequireAuth';
 import EmptyState from '@/components/notebook/EmptyState';
-import FavoriteCard, { type FavoriteCardProps } from '@/components/notebook/FavoriteCard';
+import FavoriteCard from '@/components/notebook/FavoriteCard';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-
-const initialItems: FavoriteCardProps[] = [
-  {
-    id: '1',
-    title: 'イラン情勢',
-    publishedAt: '2026-04-13',
-    mediaLine: 'NHK · CNN · BBC · Al Jazeera · DD News',
-  },
-  {
-    id: '2',
-    title: 'ドジャース',
-    publishedAt: '2026-04-12',
-    mediaLine: 'NHK · CNN · BBC',
-  },
-];
+import Link from 'next/link';
 
 export default function NotebookPage() {
   const { logout } = useAuth();
   const router = useRouter();
-  const [items, setItems] = useState<FavoriteCardProps[]>(initialItems);
-  /** 複数選択: 選択中の項目 id を Set で保持 */
+
+  const [items, setItems] = useState<any[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
+
+  // localStorage からデータを読み込む
+  useEffect(() => {
+    const saved = JSON.parse(localStorage.getItem('global_lenz_notes') || '[]');
+    setItems(saved);
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.push('/');
+    } catch (error) {
+      console.error('ログアウト失敗:', error);
+    }
+  };
 
   const isEmpty = useMemo(() => items.length === 0, [items.length]);
 
-  const toggleSelect = (id: string) => {
+  const toggleSelect = (id: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     setSelectedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
@@ -42,20 +46,28 @@ export default function NotebookPage() {
 
   const handleDeleteSelected = () => {
     if (selectedIds.size === 0) return;
-    setItems((prev) => prev.filter((item) => !selectedIds.has(item.id)));
+    const nextItems = items.filter((item) => !selectedIds.has(item.id));
+    setItems(nextItems);
+    localStorage.setItem('global_lenz_notes', JSON.stringify(nextItems));
     setSelectedIds(new Set());
-  };
-
-  const handleLogout = async () => {
-    await logout();
-    router.push('/');
   };
 
   return (
     <RequireAuth>
       <div className="relative min-h-screen bg-brand-canvas p-4 pb-28">
         <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col">
-          <h1 className="mb-5 text-xl font-bold tracking-tight text-brand-text">ネタ帳</h1>
+          {/* --- ヘッダー部分（戻るボタンとタイトル） --- */}
+          <div className="mb-6 flex items-center justify-between">
+            <h1 className="text-xl font-bold tracking-tight text-brand-text">
+              ネタ帳
+            </h1>
+            <Link
+              href="/topics" // ここを「各国要約一覧」のパスに合わせて変更してください
+              className="flex items-center gap-1 text-sm font-medium text-emerald-600 hover:text-emerald-700 transition-colors"
+            >
+              各国要約詳細へ
+            </Link>
+          </div>
 
           {isEmpty ? (
             <EmptyState />
@@ -63,11 +75,13 @@ export default function NotebookPage() {
             <ul className="flex flex-col gap-3">
               {items.map((item) => (
                 <li key={item.id}>
-                  <FavoriteCard
-                    {...item}
-                    selected={selectedIds.has(item.id)}
-                    onToggleSelect={() => toggleSelect(item.id)}
-                  />
+                  <Link href={item.url || '#'}>
+                    <FavoriteCard
+                      {...item}
+                      selected={selectedIds.has(item.id)}
+                      onToggleSelect={(e: any) => toggleSelect(item.id, e)}
+                    />
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -78,23 +92,22 @@ export default function NotebookPage() {
           <button
             type="button"
             onClick={handleLogout}
-            className="w-full rounded-full border border-emerald-200/90 bg-emerald-50 py-2.5 text-sm font-medium text-emerald-900 transition-all duration-200 hover:scale-[1.01] hover:bg-emerald-100"
+            className="w-full rounded-full border border-emerald-200/90 bg-emerald-50 py-2.5 text-sm font-medium text-emerald-900"
           >
             ログアウト
           </button>
         </div>
 
-        {!isEmpty ? (
+        {!isEmpty && (
           <button
             type="button"
             onClick={handleDeleteSelected}
             disabled={selectedIds.size === 0}
-            className="fixed bottom-20 right-4 z-40 rounded-full border border-violet-200/90 bg-violet-100 px-5 py-2.5 text-sm font-medium text-violet-900 shadow-soft transition-all duration-200 hover:scale-105 hover:bg-violet-200/80 disabled:pointer-events-none disabled:opacity-40"
+            className="fixed bottom-20 right-4 z-40 rounded-full border border-violet-200/90 bg-violet-100 px-5 py-2.5 text-sm font-medium text-violet-900 shadow-lg"
           >
-            削除
-            {selectedIds.size > 0 ? ` (${selectedIds.size})` : ''}
+            削除 {selectedIds.size > 0 ? ` (${selectedIds.size})` : ''}
           </button>
-        ) : null}
+        )}
       </div>
     </RequireAuth>
   );

@@ -1,27 +1,32 @@
 'use client';
 
 import { useAuth } from '@/context/AuthContext';
-import { useRouter, usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function RequireAuth({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const router = useRouter();
-  const pathname = usePathname();
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user === null && pathname) {
-      const redirectPath = encodeURIComponent(pathname);
-      router.replace(`/login?redirect=${redirectPath}`);
+    // loading が終わっていて、かつ user がいない時だけ飛ばす
+    if (!loading && !user) {
+      router.push('/login');
     }
-  }, [user, router, pathname]);
+  }, [user, loading, router]);
 
-  if (!user) return null;
+  // loading 中は何も表示しない、またはローディング画面を出す
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <p>読み込み中...</p>
+      </div>
+    );
+  }
 
-  return <>{children}</>;
+  return user ? <>{children}</> : null;
 }
