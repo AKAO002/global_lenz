@@ -23,12 +23,13 @@ def create_favorite(data: dict):
     return response.data
 
 # ネタ帳削除
-def delete_favorite(favorite_id: int):
+def delete_favorite(favorite_id: int,user_id: str):
 
     response = supabase.table(
         "favorites"
     ).delete().eq(
         "id", favorite_id
+    ).eq("user_id", user_id
     ).execute()
 
     return response.data
