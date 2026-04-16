@@ -1,24 +1,28 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function RequireAuth({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { user } = useAuth();
+  const { user, loading } = useAuth(); // loading を必ず取る
   const router = useRouter();
 
   useEffect(() => {
-    if (!user) {
+    // loading が終わって、かつ user が「本当に null」の時だけ飛ばす
+    if (!loading && user === null) {
       router.push('/login');
     }
-  }, [user, router]);
+  }, [user, loading, router]);
 
-  if (!user) return null;
+  // loading 中は何も出さない（またはぐるぐるを出す）
+  if (loading || user === undefined) {
+    return <div className="min-h-screen bg-brand-canvas" />;
+  }
 
-  return <>{children}</>;
+  return user ? <>{children}</> : null;
 }

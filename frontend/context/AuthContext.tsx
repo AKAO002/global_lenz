@@ -1,7 +1,6 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
-
 import { supabase } from '@/lib/supabase';
 
 type AuthContextType = {
@@ -13,26 +12,25 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<any | null>(null);
+  // 1. 初期値を undefined にして「まだ何もわからない」状態にする
+  const [user, setUser] = useState<any | null | undefined>(undefined);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const getUser = async () => {
-      try {
-        setLoading(true);
-        const { data } = await supabase.auth.getUser();
-        setUser(data.user);
-      } catch (error) {
-        console.error('Error fetching user:', error);
-      } finally {
-        setLoading(false);
-      }
+    // 2. 現在のセッション（ログイン状態）を直接取得して即座にセット
+    const initializeAuth = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      setUser(session?.user ?? null);
+      setLoading(false);
     };
 
-    getUser();
+    initializeAuth();
 
+    // 3. その後のログイン・ログアウト状態の変化を監視
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      (_, session) => {
+      (_event, session) => {
         setUser(session?.user ?? null);
         setLoading(false);
       }
@@ -46,6 +44,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const logout = async () => {
     await supabase.auth.signOut();
     setUser(null);
+    // ログアウト時は loading を false のままにしておくことで、
+    // 即座に RequireAuth が反応してリダイレクトされるようになります
   };
 
   return (
@@ -60,6 +60,5 @@ export const useAuth = () => {
   if (!context) {
     throw new Error('useAuth must be used within AuthProvider');
   }
-
   return context;
 };

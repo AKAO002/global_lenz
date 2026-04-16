@@ -59,7 +59,7 @@ export default function NotebookPage() {
           {/* --- ヘッダー部分（戻るボタンとタイトル） --- */}
           <div className="mb-6 flex items-center justify-between">
             <h1 className="text-xl font-bold tracking-tight text-brand-text">
-              ネタ帳
+              ネタ帳リスト
             </h1>
             <Link
               href="/topics" // ここを「各国要約一覧」のパスに合わせて変更してください
