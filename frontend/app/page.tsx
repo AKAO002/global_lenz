@@ -114,10 +114,14 @@ useEffect(() => {
     : summaries.filter((t: any) => t.topic_id === activeTab); // 通常時は選ばれたタブでフィルタリング
   // --------------------
 
+
+  const activeTopic = summaries.find((t: any) => t.topic_id === activeTab);
+
   return (
     <div className="bg-[#FDFBF6] min-h-screen pb-24">
       <div className="max-w-md mx-auto min-h-screen bg-white shadow-lg relative">
-        {/* 日付 + 検索窓 */}
+        
+ {/* 日付 + 検索窓 */}
         <header className="p-6 text-center">
           <h1 className="text-2xl font-bold text-gray-800">
             {new Date().toLocaleDateString('ja-JP', {
@@ -141,12 +145,14 @@ useEffect(() => {
 
         {/* タブ */}
         <nav className="flex justify-around border-b border-gray-100 mb-4 overflow-x-auto no-scrollbar">
+
           {tabs.map((tab) => (
             <button
               key={tab.topic_id}
               onClick={() => setActiveTab(tab.topic_id)}
               className={`pb-2 px-2 text-sm font-medium whitespace-nowrap ${
                 activeTab === tab.topic_id ? 'text-black border-b-2 border-black' : 'text-gray-400'
+
               }`}
             >
               {tab.topic_name}
@@ -207,7 +213,7 @@ useEffect(() => {
                     </div>
 
                     <div className="mt-6">
-                      <Link href={`/comparison/${topic.comparison_id}`}>
+                      <Link href={`/comparison/${topic.topic_id}`}>
                           <button className="w-full bg-orange-300 font-bold py-3 rounded-md shadow text-gray-900">
                             5カ国比較要約
                           </button>
