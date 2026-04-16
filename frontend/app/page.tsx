@@ -26,77 +26,93 @@ export default function HomePage() {
   const [searchKeyword, setSearchKeyword] = useState(query || '');
   const [loading, setLoading] = useState(false);
 
+// useEffect 内のロジックを整理
 useEffect(() => {
-    const fetchSummaries = async () => {
-      setLoading(true);
-      try {
-        if (query) {
-          // --- 1. 検索実行時 ---
-          const res = await fetch('http://localhost:8000/api/search', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ keyword: query })
-          });
-          const result = await res.json();
-          
-          const searchData = [{
-            topic_id: result.topic_id,
-            topic_name: result.topic_name,
-            comparison_id: result.topic_id,
-            summaries: result.report.country_summaries.map((s: any) => ({
-              id: s.id, // バックエンドで注入した本物のIDを使用
-              country_name: s.country,
-              summary: s.summary,
-              recommend_score: s.recommend_score
-            }))
-          }];
+  const fetchSummaries = async () => {
+    setLoading(true);
+    try {
+      // 1. まず「今日のトピック（朝のニュース）」を取得
+      const resToday = await fetch('http://localhost:8000/api/topics/today', { cache: 'no-store' });
+      const jsonToday = await resToday.json();
+      const rawTodayData = jsonToday.topics || [];
 
-          setSearchResult(searchData[0]);
+      // ★ここで「翻訳（マッピング）」を行う
+      // バックエンドの s.country をフロントエンド用の s.country_name に変換します
+      const formattedTodayData = rawTodayData.map((topic: any) => ({
+        ...topic,
+        summaries: topic.summaries?.map((s: any) => ({
+          id: s.id,
+          country_name: s.medias?.country_name || "不明",
+          summary: s.country_summary || "要約がありません",
+          recommend_score: s.recommend_score
+        })) || []
+      }));
 
-        } else {
-          // --- 2. 通常時（朝のニュース表示） ---
-          // エンドポイントを正しいもの（is_search=falseを返すもの）に変更
-          const res = await fetch('http://localhost:8000/api/topics/today');
-          const json = await res.json();
-          const data = json.topics; // バックエンドの戻り値に合わせて修正
+      console.log('取得したデータ:', formattedTodayData);
 
-          if (!data) return;
+      // 通常時のデータとしてセット
+      setSummaries(formattedTodayData);
 
-          setSummaries(data);
+      // タブは常に「今日のトピック」から生成
+      const uniqueTopics = formattedTodayData.map((item: any) => ({
+        topic_id: item.topic_id,
+        topic_name: item.topic_name,
+        comparison_id: item.topic_id,
+      }));
+      setTabs(uniqueTopics);
 
-          // タブの生成：通常時のデータからのみ作成する
-          const uniqueTopics = data.map((item: any) => ({
-            topic_id: item.topic_id,
-            topic_name: item.topic_name,
-            comparison_id: item.topic_id,
-          }));
-
-          setTabs(uniqueTopics);
-
-          if (uniqueTopics.length > 0) {
-            setActiveTab(uniqueTopics[0].topic_id);
-          }
+      // 2. 検索クエリがある場合は、検索結果を別途取得
+      if (query) {
+        const resSearch = await fetch('http://localhost:8000/api/search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ keyword: query }),
+          cache: 'no-store'
+        });
+        const result = await resSearch.json();
+        
+        const searchData = {
+          topic_id: result.topic_id,
+          topic_name: result.topic_name,
+          comparison_id: result.topic_id,
+          summaries: result.report.country_summaries.map((s: any) => ({
+            id: s.id,
+            country_name: s.country_name || s.country || "不明", 
+            summary: s.country_summary || s.summary || "要約がありません",
+            recommend_score: s.recommend_score
+          }))
+        };
+        setSearchResult(searchData);
+        setActiveTab(null); // 検索中はタブの選択を外す
+      } else {
+        // 通常時は検索結果をクリアし、最初のタブを選択
+        setSearchResult(null);
+        if (uniqueTopics && uniqueTopics.length > 0) {
+          setActiveTab(uniqueTopics[0].topic_id);
         }
-      } catch (err) {
-        console.error('通信に失敗:', err);
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (err) {
+      console.error('通信に失敗:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchSummaries();
-  }, [query]);
+  fetchSummaries();
+}, [query]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchKeyword.trim()) return;
-    // URLを更新して、useEffect内のquery検知を発火させる
+    // router.push('/search...') ではなく '/' を指定
     router.push(`/?q=${encodeURIComponent(searchKeyword.trim())}`);
   };
 
-  const activeTopic = query
-  ? searchResult  // 検索中は検索結果を参照
-  : summaries.find((t: any) => t.topic_id === activeTab);
+  // 1. 表示するトピックを決定するロジック
+  const displayData = query && searchResult 
+    ? [searchResult]                      // 検索中なら検索結果（1つ）を配列にする
+    : summaries.filter((t: any) => t.topic_id === activeTab); // 通常時は選ばれたタブでフィルタリング
+  // --------------------
 
   return (
     <div className="bg-[#FDFBF6] min-h-screen pb-24">
@@ -149,11 +165,10 @@ useEffect(() => {
                 </p>
               </div>
 
-              {(query && searchResult ? [searchResult] : summaries.filter((t: any) => t.topic_id === activeTab))
-                .map((topic: any) => (
-                  <div key={topic.topic_id}>
-                    <div className="grid grid-cols-2 gap-4 px-1">
-                      {topic.summaries?.map((summary: any) => (
+              {displayData.map((topic: any) => (
+                <div key={topic.topic_id}>
+                  <div className="grid grid-cols-2 gap-4 px-1">
+                    {topic.summaries?.map((summary: any) => (
                         <div key={`${topic.topic_id}-${summary.id}`} className="flex flex-col">
                           <div className="flex items-center gap-1 mb-1.5 ml-0.5">
                             <span className="text-[11px] font-bold text-gray-800">
@@ -176,9 +191,11 @@ useEffect(() => {
                             )}
                             <div className="relative z-10 p-3 h-full flex flex-col justify-between">
                               <p className="text-sm font-bold text-gray-900 leading-snug">
-                                {summary.summary?.length > 30
-                                  ? summary.summary.substring(0, 30) + '...'
-                                  : summary.summary || 'サマリーなし'}
+                                {summary.summary 
+                                  ? (summary.summary.length > 30 
+                                      ? summary.summary.substring(0, 30) + '...' 
+                                      : summary.summary)
+                                      : '読み込み中...'} 
                               </p>
                               <Link href={`/topic/${summary.id}`} className="text-[10px] underline self-end">
                                 ...もっと見る
@@ -190,13 +207,11 @@ useEffect(() => {
                     </div>
 
                     <div className="mt-6">
-                      {activeTopic && (
-                        <Link href={`/comparison/${activeTopic.comparison_id}`}>
+                      <Link href={`/comparison/${topic.comparison_id}`}>
                           <button className="w-full bg-orange-300 font-bold py-3 rounded-md shadow text-gray-900">
                             5カ国比較要約
                           </button>
                         </Link>
-                      )}
                     </div>
                   </div>
                 ))}
