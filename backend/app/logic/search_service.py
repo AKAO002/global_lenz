@@ -3,6 +3,8 @@ from openai import OpenAI
 from dotenv import load_dotenv
 import os
 import time
+import concurrent.futures
+from app.db.repository import get_supabase_client, save_to_db
 
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -59,10 +61,7 @@ def run_search(keyword: str) -> dict:
     cache_key = make_cache_key("search", keyword)
     cached = cache_get(cache_key)
     if cached:
-        print(f"  ✅ 検索キャッシュヒット: {keyword!r}")
         return cached
-
-    print(f"  🔍 検索実行: {keyword!r}")
 
     # --- クエリ生成 ---
     queries = generate_search_queries(keyword)
@@ -70,46 +69,74 @@ def run_search(keyword: str) -> dict:
     query_en   = queries.get("query_en", keyword)
     query_nhk  = queries.get("query_nhk", keyword)
 
-    print(f"  生成クエリ: en={query_en!r} / nhk={query_nhk!r}")
+    # --- 修正：記事取得を並列化 ---
+    media_results = {}
 
-    # --- 記事取得 ---
+# スレッドプールを作成して同時に実行
+    with concurrent.futures.ThreadPoolExecutor(max_workers=len(SOURCES)) as executor:
+        # 実行するタスクを登録
+        future_to_media = {}
+        for media_key in SOURCES.keys():
+            query = query_nhk if media_key == "NHK" else query_en
+            # fetch_media_articlesを並列実行
+            future = executor.submit(fetch_media_articles, media_key, topic_name, query)
+            future_to_media[future] = media_key
+
+        # 終わったものから結果を取得
+        for future in concurrent.futures.as_completed(future_to_media):
+            media_key = future_to_media[future]
+            try:
+                media_results[media_key] = future.result()
+            except Exception as e:
+                print(f"  ⚠️ {media_key} の取得失敗: {e}")
+                media_results[media_key] = f"取得エラー: {e}"
+
+    # --- AIへのインプット作成（ここは順番を整えるために取得後にループ） ---
     combined_content = ""
-    media_results    = {}
-
     for media_key, info in SOURCES.items():
-        query  = query_nhk if media_key == "NHK" else query_en
-        result = fetch_media_articles(media_key, topic_name, query)
-        media_results[media_key] = result
-
+        result = media_results.get(media_key)
         combined_content += f"【国名: {info['country']}】\n"
         if isinstance(result, dict):
-            combined_content += f"メディア名: {result['media']}\n"
-            combined_content += f"報道内容（タイトル）: {result['title']}\n"
+            combined_content += f"メディア名: {result['media']}\nタイトル: {result['title']}\n"
             desc = result.get("description", "").strip()
-            if desc:
-                combined_content += f"報道内容（詳細）: {desc}\n"
+            if desc: combined_content += f"詳細: {desc}\n"
             combined_content += f"URL: {result['url']}\n\n"
         else:
-            combined_content += f"メディア名: {info['name']}\n"
-            combined_content += f"報道内容: {result}\n\n"
+            combined_content += f"内容: {result}\n\n"
 
-        time.sleep(1)
-
-    # --- 要約生成 ---
+    # --- 要約生成とDB保存（ここはAIの処理待ちが発生します） ---
+    # --- 要約生成とDB保存 ---
     report = generate_combined_report(topic_name, combined_content)
 
+    supabase = get_supabase_client()
+    topic_id = None
+    if supabase:
+        try:
+            # DB保存実行
+            topic_id = save_to_db(supabase, topic_name, media_results, report, True)
+        
+            # 【重要】DBから今保存したばかりの ID 付きレコードを取得して report に反映させる
+            # これにより、フロントの s.country_id に値が入るようになります
+            res = supabase.table("country_summaries").select("id, medias(country_name)").eq("topic_id", topic_id).execute()
+            if res.data:
+                # 国名をキーにして ID を引ける辞書を作成
+                id_map = {item["medias"]["country_name"]: item["id"] for item in res.data}
+                # report の各サマリーに id を注入
+                for cs in report.get("country_summaries", []):
+                    cs["country_id"] = id_map.get(cs.get("country"))
+
+            print(f"✅ 検索結果をDB保存(非表示): {topic_name} / ID: {topic_id}")
+        except Exception as e:
+            print(f"⚠️ DB保存失敗: {e}")
+
     result_data = {
-        "topic_name":   topic_name,
-        "query_en":     query_en,
-        "query_nhk":    query_nhk,
-        "report":       report,
-        "media_results": {
-            k: v if isinstance(v, dict) else None
-            for k, v in media_results.items()
-        },
+        "topic_id": topic_id,
+        "topic_name": topic_name,
+        "query_en": query_en,
+        "query_nhk": query_nhk,
+        "report": report,
+        "media_results": {k: v if isinstance(v, dict) else None for k, v in media_results.items()},
     }
 
-    # --- キャッシュ保存 ---
     cache_set(cache_key, result_data, TTL_SEARCH_RESULT)
-
     return result_data

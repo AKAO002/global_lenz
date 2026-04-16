@@ -18,9 +18,11 @@ def get_today_topics():
     today = date.today().isoformat()
     cache_key = make_cache_key("topics_today", today)
 
-    cached = cache_get(cache_key)
-    if cached:
-        return {"source": "cache", "date": today, "topics": cached}
+# --- 一時的にここをコメントアウト ---
+    # cached = cache_get(cache_key)
+    # if cached:
+    #     return {"source": "cache", "date": today, "topics": cached}
+    # ----------------------------------
 
     supabase = get_supabase_client()
     if not supabase:
@@ -28,16 +30,29 @@ def get_today_topics():
 
     res = (
         supabase.table("topics")
-        .select("id, topic_name, created_at")
-        .gte("created_at", f"{today}T00:00:00")
+        .select("id, topic_name, created_at, country_summaries(*)")
+        .gte("created_at", f"{today}T00:00:00") 
+        .eq("is_search", False)
         .order("created_at")
         .execute()
     )
 
-    topics = res.data or []
-    cache_set(cache_key, topics, TTL_API_RESPONSE)
+# フロントエンドの期待する形式に少し整形
+    raw_topics = res.data or []
+    formatted_topics = []
 
-    return {"source": "db", "date": today, "topics": topics}
+    for t in raw_topics:
+        # フロントエンド(page.tsx)が map((summary: any) => ...) できる形式に整える
+        formatted_topics.append({
+            "topic_id": t["id"],
+            "topic_name": t["topic_name"],
+            "summaries": t.get("country_summaries", []) 
+        })
+        
+    # Redisに保存（整形後のデータを保存するのが効率的です）
+    cache_set(cache_key, formatted_topics, TTL_API_RESPONSE)
+
+    return {"source": "db", "date": today, "topics": formatted_topics}
 
 
 @router.get("/{topic_id}")

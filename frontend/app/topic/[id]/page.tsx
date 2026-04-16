@@ -23,7 +23,7 @@ export default function TopicPage({
 }) {
   const { id } = React.use(params);
   const router = useRouter();
-  const [topic, setTopic] = useState<any>(null);
+  const [cs, setCs] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isSaved, setIsSaved] = useState(false); // ネタ帳に保存済みかどうかの状態
 
@@ -37,11 +37,9 @@ export default function TopicPage({
         const data = await res.json();
         console.log('詳細データ受信:', data);
 
-        if (data && typeof data === 'object') {
-          setTopic(data);
-        } else {
-          setTopic(null);
-        }
+        // バックエンドの返り値 data は { topic: {...}, country_summaries: [...] } という形
+        setCs(data); // 1件の要約データをセット
+
       } catch (error) {
         console.error('取得失敗:', error);
       } finally {
@@ -89,7 +87,7 @@ export default function TopicPage({
     return <div className="p-10 text-center">読み込み中...</div>;
   }
 
-  if (!topic) {
+  if (!cs) {
     return (
       <div className="p-10 text-center bg-[#FDFBF6] min-h-screen">
         データが見つかりませんでした。
@@ -105,8 +103,10 @@ export default function TopicPage({
         {/* ヘッダーエリア（日付、タイトル、ネタ帳ボタン） */}
         <div className="flex justify-between items-center mb-10 mt-4">
           <div className="flex gap-6 items-center">
-            <h1 className="text-xl font-bold">{topic.summary_date}</h1>
-            <h2 className="text-xl font-bold">{topic.topic_name}</h2>
+            <h1 className="text-xl font-bold">
+              {cs.created_at ? new Date(cs.created_at).toLocaleDateString() : ''}
+            </h1>
+            <h2 className="text-xl font-bold">{cs.topic_name}</h2>
           </div>
           {/* ネタ帳保存ボタン（アイコン） */}
           <button
@@ -131,43 +131,53 @@ export default function TopicPage({
           </button>
         </div>
         {/* 要約テキスト */}
-        <div className="space-y-6">
-          <p className="text-center font-bold mb-6">
-            {topic.country_name}の記事要約は以下になります。
-          </p>
+
+        <div className="border-b border-gray-100 pb-10">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="bg-black text-white text-[10px] px-2 py-0.5 rounded">
+               {cs.country_name}
+            </span>
+            <span className="text-yellow-500 text-xs">{'★'.repeat(cs.recommend_score)}</span>
+          </div>
 
           {/* 画像 */}
           <div className="w-full h-40 flex items-center justify-center p-4 relative">
             {/* 国旗 */}
-            {flagImages[topic.country_name] && (
+            {flagImages[cs.country_name] && (
               <Image
-                src={flagImages[topic.country_name]}
-                alt={topic.country_name}
+                src={flagImages[cs.country_name]}
+                alt={cs.country_name}
                 fill
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 className="object-contain mix-blend-multiply opacity-70"
               />
-            )}{' '}
+            )}
           </div>
 
           {/* 要約本文 */}
           <p className="text-sm leading-relaxed tracking-wider">
-            {topic.summary}
+            {cs.summary}
           </p>
 
           {/* 引用元 */}
-          <div className="text-xs text-center mt-12 flex gap-3 justify-center">
-            <span>引用元メディア：{topic?.media_id}</span>
-            <a
-              href={topic?.sourceUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline"
-            >
-              URL
-            </a>
+          <div className="mt-4">
+            <p className="text-[10px] text-gray-400 mb-2">出典: {cs.media_name}</p>
+            <div className="space-y-2">
+              {cs.summary_articles?.map((item: any, idx: number) => (
+                <a
+                  key={idx}
+                  href={item.articles?.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline"
+                >
+                    🔗 {item.articles?.title || "ソース記事を確認する"}
+                </a>
+               ))}
+            </div>
           </div>
         </div>
+
         {/* ログアウトボタン（最下部に配置） */}
         <div className="mt-16 text-center">
           <button

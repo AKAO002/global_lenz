@@ -33,10 +33,10 @@ def upsert_media(supabase, media_key):
     return res.data[0]["id"]
 
 
-def insert_topic(supabase, topic_name):
+def insert_topic(supabase, topic_name, is_search=False): # 引数にis_searchを追加
     """topicsテーブルにトピックを挿入し、IDを返す"""
     res = supabase.table("topics").insert(
-        {"topic_name": topic_name}
+        {"topic_name": topic_name, "is_search": is_search} # is_searchをDBに送る
     ).execute()
     return res.data[0]["id"]
 
@@ -81,7 +81,7 @@ def insert_article(supabase, topic_id, media_id, article_info):
         return None
 
 
-def save_to_db(supabase, topic_name, media_results, report):
+def save_to_db(supabase, topic_name, media_results, report, is_search=False):
     """
     1トピック分のデータをDBに保存する。
     media_results: {media_key: result_dict_or_str}
@@ -92,7 +92,7 @@ def save_to_db(supabase, topic_name, media_results, report):
     print(f"  💾 DB保存開始: {topic_name}")
 
     # 1. トピック登録
-    topic_id = insert_topic(supabase, topic_name)
+    topic_id = insert_topic(supabase, topic_name, is_search=is_search)
 
     # 2. メディアIDのキャッシュ
     media_id_map = {}
