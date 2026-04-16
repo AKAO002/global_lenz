@@ -1,21 +1,25 @@
-import httpx
+import httpx,os
 from jose import jwt
 from fastapi import HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-SUPABASE_URL = "https://YOUR_PROJECT_REF.supabase.co"
-JWKS_URL = f"{SUPABASE_URL}/auth/v1/keys"
-ALGORITHM = "RS256"
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY")
+JWKS_URL = f"{SUPABASE_URL}/auth/v1/.well-known/jwks.json"
+ALGORITHMS = ["ES256"]
 
 security = HTTPBearer()
-
 
 # JWKS取得（キャッシュなし簡易版）
 async def get_jwks():
     async with httpx.AsyncClient() as client:
-        res = await client.get(JWKS_URL)
+        res = await client.get(
+            JWKS_URL,
+            headers={
+                "apikey": SUPABASE_ANON_KEY,
+            }
+        )
         return res.json()
-
 
 # JWT検証
 async def verify_jwt(token: str):
@@ -37,7 +41,7 @@ async def verify_jwt(token: str):
         payload = jwt.decode(
             token,
             key,
-            algorithms=[ALGORITHM],
+            algorithms=ALGORITHMS,
             audience="authenticated",
             issuer=f"{SUPABASE_URL}/auth/v1",
         )
@@ -45,7 +49,7 @@ async def verify_jwt(token: str):
         return payload
 
     except Exception as e:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        raise HTTPException(status_code=401, detail=str(e))
 
 
 # FastAPI dependency

@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Query, Depends
 from app.core.auth import get_current_user
+from app.services.user_service import get_public_user_id
 
 from app.services.favorite_service import (
     get_favorites,
@@ -12,21 +13,14 @@ from app.schemas.favorite import FavoriteCreate
 
 router = APIRouter()
 
-# 認証情報取得
+# ネタ帳一覧取得
 @router.get("/")
-def get_favorites(user=Depends(get_current_user)):
-    return {
-        "user_id": user["id"],
-        "email": user["email"]
-    }
+def read_favorites(user=Depends(get_current_user)):
+    auth_id = user["id"]
 
-#　ネタ帳を取得
-@router.get("/")
-def read_favorites(
-    user_id: str = Query(...)
-):
+    public_user_id = get_public_user_id(auth_id)
 
-    return get_favorites(user_id)
+    return get_favorites(public_user_id)
 
 #　ネタ帳に登録
 @router.post("/")
@@ -35,33 +29,38 @@ def add_favorite(
     user=Depends(get_current_user)
 ):
 
-    favorite_data= favorite.dict()
+    auth_id = user["id"]
 
-    # JWTからuser_id取得
-    favorite_data["user_id"] = user["id"]
+    public_user_id = get_public_user_id(auth_id)
 
-    data = create_favorite(
-        favorite_data
-    )
+    favorite_data= favorite.model_dump()
 
-    return data
+    favorite_data["user_id"] = public_user_id
+
+    return create_favorite(favorite_data)
 
 #  ネタ帳から削除
 @router.delete("/{favorite_id}")
 def remove_favorite(
-    favorite_id: int
+    favorite_id: int,
+    user=Depends(get_current_user)
 ):
 
-    data = delete_favorite(favorite_id)
+    auth_id = user["id"]
 
-    return data
+    public_user_id = get_public_user_id(auth_id)
 
-# フロント用表示用ネタ帳リスト
+    return delete_favorite(favorite_id,public_user_id)
+
+# フロント表示用ネタ帳リスト
 @router.get("/with-summaries")
 def read_favorites_with_summaries(
-    user_id: str = Query(...)
+    user=Depends(get_current_user)
 ):
+    auth_id = user["id"]
+
+    public_user_id = get_public_user_id(auth_id)
 
     return get_favorites_with_summaries(
-        user_id
+        public_user_id
     )

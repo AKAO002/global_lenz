@@ -1,6 +1,7 @@
-from fastapi import FastAPI
+from fastapi import FastAPI,Depends
 from fastapi.middleware.cors import CORSMiddleware
 from app.app_api import router as api_router
+from app.core.auth import get_current_user
 
 app = FastAPI()
 
@@ -22,3 +23,8 @@ app.include_router(api_router)
 @app.get("/")
 def root():
     return {"message": "Backendが動きました!!"}
+
+# 認証テストAPI
+@app.get("/api/me")
+async def get_me(user=Depends(get_current_user)):
+    return user
