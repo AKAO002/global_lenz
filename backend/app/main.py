@@ -23,8 +23,11 @@ app.include_router(api_router)
 @app.get("/")
 def root():
     return {"message": "Backendが動きました!!"}
+<<<<<<< HEAD
 
 # 認証テストAPI
 @app.get("/api/me")
 async def get_me(user=Depends(get_current_user)):
     return user
+=======
+>>>>>>> develop
