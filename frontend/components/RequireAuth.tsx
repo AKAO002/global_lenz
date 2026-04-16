@@ -15,7 +15,8 @@ export default function RequireAuth({
   useEffect(() => {
     // loading が終わって、かつ user が「本当に null」の時だけ飛ばす
     if (!loading && user === null) {
-      router.push('/login');
+      const currentPath = window.location.pathname;
+      router.push(`/login?redirect=${currentPath}`);
     }
   }, [user, loading, router]);
 
