@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import RequireAuth from '@/components/RequireAuth';
-import Link from 'next/link';
 import Image from 'next/image';
 
 // 国画像
@@ -157,15 +156,17 @@ export default function TopicPage({
 
           {/* 引用元 */}
           <div className="text-xs text-center mt-12 flex gap-3 justify-center">
-            <span>引用元メディア：{topic?.media_id}</span>
-            <a
-              href={topic?.sourceUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline"
-            >
-              URL
-            </a>
+            <span>引用元：{topic.media_name}</span>
+            {topic.url && (
+              <a
+                href={topic.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline"
+              >
+                {topic.url}
+              </a>
+            )}
           </div>
         </div>
         {/* ログアウトボタン（最下部に配置） */}
