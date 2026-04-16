@@ -102,52 +102,69 @@ export default function TopicPage({
       {' '}
       {/* これで未ログインは弾く */}
       <div className="p-6 max-w-md mx-auto bg-[#FDFBF6] min-h-screen text-gray-800">
-        {/* ヘッダーエリア（日付、タイトル、ネタ帳ボタン） */}
-        <div className="flex justify-between items-center mb-10 mt-4">
-          <div className="flex gap-6 items-center">
-            <h1 className="text-xl font-bold">{topic.summary_date}</h1>
-            <h2 className="text-xl font-bold">{topic.topic_name}</h2>
+        {/* ヘッダーエリア*/}
+        <header className="flex items-center justify-between mb-8 pb-3 border-b border-gray-200">
+          <div className="flex items-baseline gap-2">
+            {/* 日付*/}
+            <h1 className="text-xl font-bold">
+              {new Date()
+                .toLocaleDateString('ja-JP', {
+                  month: 'numeric',
+                  day: 'numeric',
+                  weekday: 'short',
+                })
+                .replace(/\//g, '月') + '）'}
+            </h1>
           </div>
-          {/* ネタ帳保存ボタン（アイコン） */}
+
+          {/* ネタ帳保存ボタン（アイコン）*/}
           <button
             onClick={handleSaveToNotebook}
-            className={`transition-colors ${isSaved ? 'text-gray-400' : 'hover:text-gray-500'}`}
+            className={`flex items-center justify-center w-10 h-10 rounded-full transition-colors ${
+              isSaved
+                ? 'text-amber-700 bg-amber-50' // 保存済み：真鍮色（シック）
+                : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100' // 未保存
+            }`}
+            title={isSaved ? '保存済み' : 'ネタ帳に追加'}
           >
-            {/* 画像のようなカレンダー/手帳アイコン (SVGなどを使う) */}
+            {/* ネタ帳アイコン */}
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-7 w-7"
-              fill="none"
+              className="w-6 h-6"
+              fill={isSaved ? 'currentColor' : 'none'}
               viewBox="0 0 24 24"
               stroke="currentColor"
             >
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                strokeWidth={1.5}
+                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
               />
             </svg>
           </button>
-        </div>
+        </header>
+
         {/* 要約テキスト */}
         <div className="space-y-6">
           <p className="text-center font-bold mb-6">
-            {topic.country_name}の記事要約は以下になります。
+            {topic.topic_name}について
           </p>
 
-          {/* 画像 */}
-          <div className="w-full h-40 flex items-center justify-center p-4 relative">
-            {/* 国旗 */}
+          {/* 国旗画像エリア */}
+          <div className="flex justify-center my-6">
             {flagImages[topic.country_name] && (
-              <Image
-                src={flagImages[topic.country_name]}
-                alt={topic.country_name}
-                fill
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                className="object-contain mix-blend-multiply opacity-70"
-              />
-            )}{' '}
+              <div className="relative w-28 h-20 transition-opacity duration-300 hover:opacity-100">
+                <Image
+                  src={flagImages[topic.country_name]}
+                  alt={`${topic.country_name}の国旗`}
+                  fill
+                  sizes="112px"
+                  priority
+                  className="object-contain mix-blend-multiply opacity-60" // 透過率を少し上げて、より馴染ませる
+                />
+              </div>
+            )}
           </div>
 
           {/* 要約本文 */}
@@ -157,18 +174,22 @@ export default function TopicPage({
 
           {/* 引用元 */}
           <div className="text-xs text-center mt-12 flex gap-3 justify-center">
-            <span>引用元メディア：{topic?.media_id}</span>
-            <a
-              href={topic?.sourceUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline"
-            >
-              URL
-            </a>
+            <span>引用元：{topic.media_name}</span>
+            {topic.url && (
+              <a
+                href={topic.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline"
+              >
+                URL
+                {topic.url}
+              </a>
+            )}
           </div>
         </div>
-        {/* ログアウトボタン（最下部に配置） */}
+
+        {/* ログアウトボタン*/}
         <div className="mt-16 text-center">
           <button
             onClick={handleLogout}

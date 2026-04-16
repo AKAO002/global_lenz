@@ -56,17 +56,11 @@ export default function NotebookPage() {
     <RequireAuth>
       <div className="relative min-h-screen bg-brand-canvas p-4 pb-28">
         <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col">
-          {/* --- ヘッダー部分（戻るボタンとタイトル） --- */}
+          {/* --- ヘッダー部分 --- */}
           <div className="mb-6 flex items-center justify-between">
             <h1 className="text-xl font-bold tracking-tight text-brand-text">
               ネタ帳リスト
             </h1>
-            <Link
-              href="/topics" // ここを「各国要約一覧」のパスに合わせて変更してください
-              className="flex items-center gap-1 text-sm font-medium text-emerald-600 hover:text-emerald-700 transition-colors"
-            >
-              各国要約詳細へ
-            </Link>
           </div>
 
           {isEmpty ? (
