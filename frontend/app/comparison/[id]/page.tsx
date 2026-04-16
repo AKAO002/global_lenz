@@ -109,7 +109,7 @@ export default function ComparePage() {
                   day: 'numeric',
                   weekday: 'short',
                 })
-                .replace(/\//g, '月') + '）'}
+                .replace(/\//g, '月')}
             </h1>
           </div>
 
@@ -155,6 +155,35 @@ export default function ComparePage() {
                 <p className="text-sm text-gray-700 leading-relaxed">
                   {comparison.comparison_summary}
                 </p>
+              </div>
+
+              <div className="space-y-4">
+                {comparison.country_summaries
+                  ?.filter((country: any) => country.url !== null)
+                  .map((country: any, index: number) => (
+                    <div
+                      key={index}
+                      className="border rounded-lg p-4 bg-gray-50"
+                    >
+                      {/* URL表示 */}
+                      <div className="text-xs text-gray-500">
+                        <span className="font-semibold">引用元:</span>
+
+                        <span className="ml-1">{country.media_name}</span>
+
+                        <div className="mt-1">
+                          <a
+                            href={country.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-500 underline break-all"
+                          >
+                            {country.url}
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
               </div>
             </div>
           ) : (
