@@ -205,7 +205,6 @@ export default function TopicPage({
                 rel="noopener noreferrer"
                 className="underline"
               >
-                URL
                 {topic.url}
               </a>
             )}
