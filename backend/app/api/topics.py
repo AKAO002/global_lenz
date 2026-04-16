@@ -32,7 +32,7 @@ def get_today_topics():
         supabase.table("topics")
         .select("id, topic_name, created_at, country_summaries(*)")
         .gte("created_at", f"{today}T00:00:00") 
-        .eq("is_search", False)
+        .is_("is_search", False)
         .order("created_at")
         .execute()
     )

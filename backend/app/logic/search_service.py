@@ -117,13 +117,26 @@ def run_search(keyword: str) -> dict:
         
             # 【重要】DBから今保存したばかりの ID 付きレコードを取得して report に反映させる
             # これにより、フロントの s.country_id に値が入るようになります
-            res = supabase.table("country_summaries").select("id, medias(country_name)").eq("topic_id", topic_id).execute()
+            # 保存したばかりのレコードから本物のIDを引く
+            res = supabase.table("country_summaries").select("id, media_id, medias(country_name)").eq("topic_id", topic_id).execute()
+            
             if res.data:
-                # 国名をキーにして ID を引ける辞書を作成
+                # DB上のIDを「国名」で引けるようにマッピング
+                # medias(country_name) の階層に注意
                 id_map = {item["medias"]["country_name"]: item["id"] for item in res.data}
-                # report の各サマリーに id を注入
+                
+                # report内のサマリーに本物のIDを注入
                 for cs in report.get("country_summaries", []):
-                    cs["country_id"] = id_map.get(cs.get("country"))
+                    c_name = cs.get("country")
+                    real_db_id = id_map.get(c_name)
+                    if real_db_id:
+                        cs["id"] = real_db_id  # ★フロントの s.id 用
+                        cs["country_id"] = real_db_id
+                        # もしDBのカラム名が country_summary なら、フロントに合わせて summary に入れ直す
+                        if "summary" not in cs and "country_summary" in cs:
+                            cs["summary"] = cs["country_summary"]
+
+                print(f"✅ ID注入完了: {id_map}")
 
             print(f"✅ 検索結果をDB保存(非表示): {topic_name} / ID: {topic_id}")
         except Exception as e:
