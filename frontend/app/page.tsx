@@ -162,7 +162,43 @@ useEffect(() => {
 
         <div className="px-4">
           {loading ? (
-            <div className="text-center py-10 text-sm text-gray-400">読み込み中...</div>
+            <div className="flex flex-col items-center justify-center py-20 px-6">
+              {/* 1. アニメーションアイコン（知的な回転体） */}
+              <div className="relative w-16 h-16 mb-6">
+                <div className="absolute inset-0 border-4 border-orange-100 rounded-full"></div>
+                <div className="absolute inset-0 border-4 border-t-orange-400 rounded-full animate-spin"></div>
+                <div className="absolute inset-2 border-4 border-b-blue-300 rounded-full animate-[spin_1.5s_linear_infinite_reverse]"></div>
+              </div>
+              
+              {/* 2. テキスト演出 */}
+              <div className="text-center space-y-2">
+                <h2 className="text-xl font-bold text-gray-800 animate-pulse">
+                  AIが世界中を分析中...
+                </h2>
+                <div className="flex flex-col items-center">
+                  <p className="text-sm text-gray-500 font-medium">
+                    「{searchKeyword}」に関する視点を抽出しています
+                  </p>
+                  <p className="text-[10px] text-gray-400 mt-4 tracking-widest uppercase">
+                    Fetching from Global Media
+                  </p>
+                </div>
+              </div>
+
+              {/* 3. プログレスバー（視覚的な進捗感） */}
+              <div className="mt-8 w-full max-w-[200px] h-1 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-orange-300 to-orange-500 animate-[loading-bar_3s_infinite]"></div>
+              </div>
+
+              {/* Tailwind CSSのカスタムアニメーションをインラインで追加 */}
+              <style dangerouslySetInnerHTML={{ __html: `
+                @keyframes loading-bar {
+                  0% { transform: translateX(-100%); }
+                  50% { transform: translateX(0); }
+                  100% { transform: translateX(100%); }
+                }
+              `}} />
+            </div>
           ) : (
             <>
               <div className="text-center mb-6">
