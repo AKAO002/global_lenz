@@ -1,6 +1,6 @@
 import httpx,os
 from jose import jwt
-from fastapi import HTTPException, Depends
+from fastapi import HTTPException, Depends,Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
@@ -8,7 +8,7 @@ SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY")
 JWKS_URL = f"{SUPABASE_URL}/auth/v1/.well-known/jwks.json"
 ALGORITHMS = ["ES256"]
 
-security = HTTPBearer()
+security = HTTPBearer(auto_error=False)
 
 # JWKS取得（キャッシュなし簡易版）
 async def get_jwks():
@@ -63,3 +63,24 @@ async def get_current_user(
         "id": payload.get("sub"),
         "email": payload.get("email"),
     }
+
+async def get_current_user_optional(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+):
+    """
+    JWTがあればユーザー返す
+    なければ None
+    """
+
+    if not credentials:
+        return None
+
+    try:
+        token = credentials.credentials
+
+        payload = await verify_jwt(token)
+
+        return payload
+
+    except Exception:
+        return None
