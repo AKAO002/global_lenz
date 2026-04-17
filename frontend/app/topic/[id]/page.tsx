@@ -94,6 +94,8 @@ export default function TopicPage({
         showToast('ネタ帳から削除しました');
       } else {
         // 保存処理
+        const isComparisonPage =
+          window.location.pathname.includes('comparison');
         const response = await fetch('http://localhost:8000/api/favorites/', {
           method: 'POST',
           headers: {
@@ -101,17 +103,24 @@ export default function TopicPage({
             Authorization: `Bearer ${token}`, // バックエンドの認証を通す
           },
           body: JSON.stringify({
-            country_summary_id: parseInt(id),
+            [isComparisonPage ? 'comparison_summary_id' : 'country_summary_id']:
+              parseInt(id),
           }),
         });
 
         if (!response.ok) {
           const err = await response.json();
           console.error('FastAPIエラー:', err);
-          alert('保存に失敗しました: ' + (err.detail || 'サーバーエラー'));
+
+          // 二重保存防止のメッセージチェック
+          if (err.detail?.includes('already exists')) {
+            alert('このトピックは保存済みです');
+            setIsSaved(true);
+          } else {
+            alert('保存失敗: ' + err.detail);
+          }
           return;
         }
-
         setIsSaved(true);
         showToast('ネタ帳に追加しました！');
       }

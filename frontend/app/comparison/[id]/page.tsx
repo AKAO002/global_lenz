@@ -51,47 +51,54 @@ export default function ComparePage() {
   }, [id, user]);
 
   // ネタ帳保存処理
-  const handleSaveToNotebook = async (
-    summaryId: number,
-    isCurrentlySaved: boolean
-  ) => {
-    // 非認証→ログイン
-    if (!user || !session) {
-      setIsModalOpen(true);
-      return;
-    }
-
-    const token = session.access_token;
-
-    // ログイン済み→保存処理
+  const handleSaveToNotebook = async () => {
     try {
-      if (isCurrentlySaved) {
+      // 未ログインならモーダル
+      if (!session) {
+        setIsModalOpen(true);
+        return;
+      }
+
+      const token = session.access_token;
+
+      // ログイン済み→保存処理
+      if (isSaved) {
         // 削除処理
         console.log('ネタ帳から削除中...');
-        const res = await fetch(
-          `http://localhost:8000/api/favorites/${summaryId}`,
-          {
-            method: 'DELETE',
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        const res = await fetch(`http://localhost:8000/api/favorites/${id}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error('削除に失敗しました');
 
         setIsSaved(false); // 色をグレーに戻す
         showToast('ネタ帳から削除しました');
       } else {
         // 保存処理
         console.log('ネタ帳に追加中...');
-        const res = await fetch(`http://localhost:8000/api/favorites/`, {
+        const isComparisonPage =
+          window.location.pathname.includes('comparison');
+        const response = await fetch(`http://localhost:8000/api/favorites/`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${session?.access_token}`,
           },
           body: JSON.stringify({
-            comparison_summary_id: Number(id),
-            country_summary_id: null,
+            [isComparisonPage ? 'comparison_summary_id' : 'country_summary_id']:
+              parseInt(id),
           }),
         });
+
+        if (!response.ok) {
+          const err = await response.json();
+          if (err.detail?.includes('already exists')) {
+            setIsSaved(true);
+            return;
+          }
+          alert('保存失敗: ' + (err.detail || 'エラー'));
+          return;
+        }
 
         setIsSaved(true); // 色を真鍮色（アンバー）にする
         showToast('ネタ帳に追加しました！');
@@ -133,14 +140,7 @@ export default function ComparePage() {
 
           {/* ネタ帳保存ボタン（アイコン）*/}
           <button
-            onClick={() => {
-              // 🌟 安全装置：comparison が存在するときだけ実行する
-              if (comparison && comparison.id) {
-                handleSaveToNotebook(comparison.id, isSaved);
-              } else {
-                console.warn('データの読み込みを待っています...');
-              }
-            }}
+            onClick={handleSaveToNotebook}
             className={`flex items-center justify-center w-10 h-10 rounded-full transition-colors ${
               isSaved
                 ? 'text-amber-700 bg-amber-50' // 保存済み

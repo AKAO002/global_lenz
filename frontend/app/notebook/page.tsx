@@ -14,6 +14,8 @@ export default function NotebookPage() {
 
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   // const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
 
   // --- DBからデータを取得する処理 ---
@@ -58,63 +60,83 @@ export default function NotebookPage() {
 
   const isEmpty = useMemo(() => items.length === 0, [items.length]);
 
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  // const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
-  const toggleSelect = (id: number, e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+  // チェックボックスのON/OFF
+  const toggleSelect = (id: number) => {
+    const newSet = new Set(selectedIds);
+    if (newSet.has(id)) {
+      newSet.delete(id);
+    } else {
+      newSet.add(id);
+    }
+    setSelectedIds(newSet);
   };
 
+  // 一括削除実行
   const handleDeleteSelected = async () => {
-    if (selectedIds.size === 0) return;
-    if (!session?.access_token) return;
+    if (selectedIds.size === 0) {
+      setIsEditMode(false); // 何も選んでなければモード終了
+      return;
+    }
 
     if (!confirm(`${selectedIds.size}件のネタを削除してもよろしいですか？`))
       return;
 
     try {
-      // 選択された各IDに対して削除リクエストを送る
+      const token = session?.access_token;
+
       const deletePromises = Array.from(selectedIds).map((id) =>
         fetch(`http://localhost:8000/api/favorites/${id}`, {
           method: 'DELETE',
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         })
       );
 
       await Promise.all(deletePromises);
 
-      // 画面上のリストからも消す
-      setItems((prev) => prev.filter((item) => !selectedIds.has(item.id)));
+      // 🌟 画面から消す (item.favorite_id なのか item.id なのか、DBのキーに合わせてください)
+      setItems((prev) =>
+        prev.filter((item) => !selectedIds.has(item.favorite_id))
+      );
+
+      // 後片付け
       setSelectedIds(new Set());
+      setIsEditMode(false);
       alert('削除しました');
     } catch (error) {
-      console.error('削除に失敗しました:', error);
-      alert('一部の削除に失敗しました');
+      console.error('削除失敗:', error);
     }
   };
 
+  console.log('ネタ帳の生データ:', items);
   // 届いたデータをトピック名でグループ化する
   const groupedTopics = items.reduce((acc: any[], current: any) => {
+    const topicName =
+      current.comparison_summary?.topic_name ||
+      current.country_summaries?.topic_name ||
+      current.topic_name;
     // すでに同じトピック名の箱があるか探す
-    const existingTopic = acc.find(
-      (item) => item.topic_name === current.topic_name
-    );
+    const existingGroup = acc.find((g) => g.topic_name === topicName);
 
-    if (existingTopic) {
-      // あれば、その箱の links 配列に今のデータを追加
-      existingTopic.links.push(current);
+    const linkInfo = {
+      favorite_id: current.favorite_id,
+      label:
+        current.label ||
+        (current.type === current.country_summary_id
+          ? '各国詳細'
+          : '5カ国比較要約'),
+      target_id: current.target_id,
+      type: current.type,
+    };
+
+    if (existingGroup) {
+      // すでにカードがあれば、そこにリンク（ボタン）を追加
+      existingGroup.links.push(linkInfo);
     } else {
       // なければ、新しいトピックの箱を作る
       acc.push({
-        topic_name: current.topic_name,
+        topic_name: topicName,
         created_at: current.created_at,
         links: [current],
       });
@@ -133,6 +155,26 @@ export default function NotebookPage() {
             <h1 className="text-xl font-bold tracking-tight text-brand-text">
               ネタ帳リスト
             </h1>
+            <button
+              onClick={() => {
+                if (isEditMode) {
+                  handleDeleteSelected(); // モード中なら削除実行
+                } else {
+                  setIsEditMode(true); // モード中でなければ編集開始
+                }
+              }}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                isEditMode
+                  ? 'bg-red-500 text-white hover:bg-red-600' // 実行ボタン
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200' // 編集開始ボタン
+              }`}
+            >
+              {isEditMode
+                ? selectedIds.size > 0
+                  ? `${selectedIds.size}件を削除`
+                  : 'キャンセル'
+                : '編集'}
+            </button>
           </div>
           {isEmpty ? (
             <EmptyState />
@@ -162,26 +204,46 @@ export default function NotebookPage() {
                     </span>
                   </div>
 
-                  {/* リンクをまとまって表示 */}
+                  {/* リンク/選択ボタンをまとまって表示 */}
                   <div className="flex flex-wrap gap-2">
                     {group.links.map((link: any) => (
-                      <Link
-                        key={link.favorite_id}
-                        href={
-                          link.type === 'country'
-                            ? `/topic/${link.target_id}`
-                            : `/comparison/${link.target_id}`
-                        }
-                        className="px-4 py-1.5 bg-white/60 text-[#2D4A36] rounded-lg text-[14px] border border-[#2D4A36]/10 hover:bg-white transition-colors"
-                      >
-                        {link.label}
-                      </Link>
+                      <div key={link.favorite_id} className="relative">
+                        {isEditMode ? (
+                          <button
+                            onClick={() => toggleSelect(link.favorite_id)}
+                            className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-[14px] border transition-all ${
+                              selectedIds.has(link.favorite_id)
+                                ? 'bg-red-500 text-white border-red-600'
+                                : 'bg-white/40 text-[#2D4A36] border-[#2D4A36]/10'
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              readOnly
+                              checked={selectedIds.has(link.favorite_id)}
+                              className="pointer-events-none h-3 w-3 accent-red-600"
+                            />
+                            {link.label}
+                          </button>
+                        ) : (
+                          <Link
+                            href={
+                              link.type === 'country'
+                                ? `/topic/${link.target_id}`
+                                : `/comparison/${link.target_id}`
+                            }
+                            className="px-4 py-1.5 bg-white/60 text-[#2D4A36] rounded-lg text-[14px] border border-[#2D4A36]/10 hover:bg-white transition-colors"
+                          >
+                            {link.label}
+                          </Link>
+                        )}
+                      </div>
                     ))}
                   </div>
                 </div>
               ))}
             </div>
-          )}{' '}
+          )}
         </div>
 
         <div className="mx-auto mt-8 w-full max-w-2xl">
