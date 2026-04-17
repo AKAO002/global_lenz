@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import RequireAuth from '@/components/RequireAuth';
-import Link from 'next/link';
 import Image from 'next/image';
 
 // 国画像
@@ -32,11 +31,21 @@ export default function TopicPage({
       setLoading(true);
       try {
         const apiUrl = `http://localhost:8000/api/country-summaries/${id}/detail`;
-        const res = await fetch(apiUrl);
-        if (!res.ok) throw new Error('データの取得に失敗しました');
-        const data = await res.json();
-        console.log('詳細データ受信:', data);
+        const token = localStorage.getItem('access_token');
+        const res = await fetch(apiUrl, {
+          headers: {
+            Authorization: token ? `Bearer ${token}` : '',
+          },
+        });
+        // 未ログインはログイン画面へ遷移
+        if (res.status === 401) {
+          router.push('/login'); // ← 未ログインは即遷移
+          return;
+        }
 
+        if (!res.ok) throw new Error('データの取得に失敗しました');
+
+        const data = await res.json();
         if (data && typeof data === 'object') {
           setTopic(data);
         } else {
@@ -156,16 +165,21 @@ export default function TopicPage({
           </p>
 
           {/* 引用元 */}
-          <div className="text-xs text-center mt-12 flex gap-3 justify-center">
-            <span>引用元メディア：{topic?.media_id}</span>
-            <a
-              href={topic?.sourceUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline"
-            >
-              URL
-            </a>
+          <div className="text-xs text-gray-500 border rounded-lg p-4 bg-gray-50">
+            <span className="font-semibold">引用元</span>
+
+            <span className="ml-1">{topic?.media_name}</span>
+
+            <div className="mt-1">
+              <a
+                href={topic?.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline break-all"
+              >
+                {topic?.url}
+              </a>
+            </div>
           </div>
         </div>
         {/* ログアウトボタン（最下部に配置） */}
