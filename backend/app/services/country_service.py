@@ -103,7 +103,7 @@ def get_country_detail(country_id: int):
             url
     }
 
-def get_home_country_summaries():
+def get_home_country_summaries(is_login: bool):
 
     response = (
         supabase
@@ -143,11 +143,27 @@ def get_home_country_summaries():
 
         for cs in topic["country_summaries"]:
 
+            text = cs["country_summary"]
+
+            # preview制御
+            if not is_login:
+
+                preview = text[:120]
+
+                summary_text = preview + "..."
+                locked = True
+
+            else:
+
+                summary_text = text
+                locked = False
+
             summaries.append({
                 "id": cs["id"],
                 "country_name": cs["medias"]["country_name"],
                 "summary": cs["country_summary"],
-                "recommend_score": cs["recommend_score"]
+                "recommend_score": cs["recommend_score"],
+                "locked": locked
             })
         
         comp_id = None

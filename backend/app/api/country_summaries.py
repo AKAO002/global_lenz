@@ -15,10 +15,9 @@ router = APIRouter()
 def read_home_country_summaries(
     user=Depends(get_current_user_optional)
 ):
-
-    data = get_home_country_summaries()
-
     is_login = user is not None
+
+    data = get_home_country_summaries(is_login)
 
     return {
         "is_login": is_login,
