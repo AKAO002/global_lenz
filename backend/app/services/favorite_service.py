@@ -103,7 +103,7 @@ def get_favorites_with_summaries(user_id: str):
                     country_summary
                     ["medias"]
                     ["country_name"]
-                    + "要約",
+                    + "詳細",
 
                 "target_id":
                     row["country_summary_id"]
@@ -141,3 +141,24 @@ def get_favorites_with_summaries(user_id: str):
 
 
     return result
+
+# お気に入りID一覧取得（home用）
+def get_user_favorite_ids(user_id: int):
+
+    response = supabase.table(
+        "favorites"
+    ).select(
+        "country_summary_id"
+    ).eq(
+        "user_id",
+        user_id
+    ).execute()
+
+    if not response.data:
+        return set()
+
+    return {
+        row["country_summary_id"]
+        for row in response.data
+        if row["country_summary_id"]
+    }

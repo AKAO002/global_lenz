@@ -1,4 +1,10 @@
 from app.db.supabase import supabase
+from app.services.favorite_service import (
+    get_user_favorite_ids
+)
+from app.services.user_service import (
+    get_public_user_id
+)
 
 def get_country_summaries():
 
@@ -103,7 +109,19 @@ def get_country_detail(country_id: int):
             url
     }
 
-def get_home_country_summaries(is_login: bool):
+def get_home_country_summaries(is_login: bool,auth_user_id: str | None):
+
+    favorite_ids = set()
+
+    if is_login and auth_user_id:
+
+        public_user_id = get_public_user_id(
+            auth_user_id
+        )
+
+        favorite_ids = get_user_favorite_ids(
+            public_user_id
+        )
 
     response = (
         supabase
@@ -161,9 +179,10 @@ def get_home_country_summaries(is_login: bool):
             summaries.append({
                 "id": cs["id"],
                 "country_name": cs["medias"]["country_name"],
-                "summary": cs["country_summary"],
+                "summary": summary_text,
                 "recommend_score": cs["recommend_score"],
-                "locked": locked
+                "locked": locked,
+                "is_favorited": cs["id"] in favorite_ids
             })
         
         comp_id = None
