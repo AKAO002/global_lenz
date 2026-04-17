@@ -121,44 +121,50 @@ useEffect(() => {
     <div className="bg-[#FDFBF6] min-h-screen pb-24">
       <div className="max-w-md mx-auto min-h-screen bg-white shadow-lg relative">
         
- {/* 日付 + 検索窓 */}
-        <header className="p-6 text-center">
-          <h1 className="text-2xl font-bold text-gray-800">
+{/* 日付 + 検索窓 を横並びに修正 */}
+{/* ヘッダー全体：px-6 に広げて日付を少し内側へ */}
+        <header className="p-4 px-6 flex items-center justify-between gap-4">
+          {/* 日付：text-lg に少しサイズダウンして馴染ませる */}
+          <h1 className="text-lg font-bold text-gray-800 whitespace-nowrap tracking-tight">
             {new Date().toLocaleDateString('ja-JP', {
               month: 'numeric',
               day: 'numeric',
               weekday: 'short',
             })}
           </h1>
-          {/* 追加：検索フォーム */}
-          <form onSubmit={handleSearch} className="mt-4 flex bg-gray-100 rounded-full px-4 py-2">
+
+          {/* 検索フォーム：max-w-[200px] で大きさを制限し、ml-auto で右側に寄せる */}
+          <form 
+            onSubmit={handleSearch} 
+            className="flex-grow max-w-[180px] ml-auto flex bg-gray-100 rounded-full px-3 py-1.5 items-center border border-transparent focus-within:border-gray-200 transition-all"
+          >
             <input 
               type="text" 
               value={searchKeyword} 
               onChange={(e) => setSearchKeyword(e.target.value)} 
-              className="bg-transparent flex-grow outline-none text-sm text-gray-700" 
-              placeholder="ニュースを検索..." 
+              className="bg-transparent flex-grow outline-none text-xs text-gray-700 w-full" 
+              placeholder="検索..." 
             />
-            <button type="submit" className="text-gray-500">🔍</button>
+            <button type="submit" className="text-gray-400 ml-1 text-xs">🔍</button>
           </form>
         </header>
 
         {/* タブ */}
-        <nav className="flex justify-around border-b border-gray-100 mb-4 overflow-x-auto no-scrollbar">
-
-          {tabs.map((tab) => (
-            <button
-              key={tab.topic_id}
-              onClick={() => setActiveTab(tab.topic_id)}
-              className={`pb-2 px-2 text-sm font-medium whitespace-nowrap ${
-                activeTab === tab.topic_id ? 'text-black border-b-2 border-black' : 'text-gray-400'
-
-              }`}
-            >
-              {tab.topic_name}
-            </button>
-          ))}
-        </nav>
+        {!query && (
+          <div className="px-4 mb-6 flex flex-wrap gap-2 justify-center">
+            {tabs.map((tab) => (
+              <button
+                key={tab.topic_id}
+                onClick={() => setActiveTab(tab.topic_id)}
+                className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${
+                  activeTab === tab.topic_id ? 'bg-black text-white' : 'bg-gray-100 text-gray-500 border border-gray-200'
+                }`}
+              >
+                {tab.topic_name}
+              </button>
+            ))}
+          </div>
+        )}
 
         <div className="px-4">
           {loading ? (
@@ -209,54 +215,45 @@ useEffect(() => {
 
               {displayData.map((topic: any) => (
                 <div key={topic.topic_id}>
+                  {/* 修正点：recommend_score順に並べ替え */}
                   <div className="grid grid-cols-2 gap-4 px-1">
-                    {topic.summaries?.map((summary: any) => (
-                        <div key={`${topic.topic_id}-${summary.id}`} className="flex flex-col">
-                          <div className="flex items-center gap-1 mb-1.5 ml-0.5">
-                            <span className="text-[11px] font-bold text-gray-800">
-                              {summary.country_name}：
-                            </span>
-                            <span className="text-[11px] text-yellow-500 tracking-tighter">
-                              {'★'.repeat(summary.recommend_score || 0)}
-                            </span>
-                          </div>
+                    {[...topic.summaries]
+                      .sort((a, b) => (b.recommend_score || 0) - (a.recommend_score || 0))
+                      .map((summary: any) => {
+                        const isNoData = !summary.summary || summary.summary.includes("確認されませんでした") || summary.recommend_score <= 1;
 
-                          <div className="relative rounded-sm overflow-hidden border border-gray-100 h-[170px]">
-                            {flagImages[summary.country_name] && (
-                              <Image
-                                src={flagImages[summary.country_name]}
-                                alt={summary.country_name}
-                                fill
-                                sizes="(max-width: 768px) 100vw"
-                                className="object-cover mix-blend-multiply opacity-30"
-                              />
-                            )}
-                            <div className="relative z-10 p-3 h-full flex flex-col justify-between">
-                              <p className="text-sm font-bold text-gray-900 leading-snug">
-                                {summary.summary 
-                                  ? (summary.summary.length > 30 
-                                      ? summary.summary.substring(0, 30) + '...' 
-                                      : summary.summary)
-                                      : '読み込み中...'} 
-                              </p>
-                              <Link href={`/topic/${summary.id}`} className="text-[10px] underline self-end">
-                                ...もっと見る
-                              </Link>
+                        return (
+                          <div key={`${topic.topic_id}-${summary.id}`} className={`flex flex-col transition-opacity ${isNoData ? 'opacity-40 grayscale' : 'opacity-100'}`}>
+                            <div className="flex items-center gap-1 mb-1.5 ml-0.5">
+                              <span className="text-[11px] font-bold">{summary.country_name}：</span>
+                              {!isNoData && <span className="text-[11px] text-yellow-500">{'★'.repeat(summary.recommend_score || 0)}</span>}
+                            </div>
+
+                            <div className="relative rounded-sm overflow-hidden border border-gray-100 h-[170px] bg-gray-50">
+                              {flagImages[summary.country_name] && (
+                                <Image src={flagImages[summary.country_name]} alt={summary.country_name} fill className="object-cover mix-blend-multiply opacity-20" />
+                              )}
+                              <div className="relative z-10 p-3 h-full flex flex-col justify-between">
+                                <p className="text-sm font-bold leading-snug">
+                                  {isNoData ? "このトピックに関する報道は確認されませんでした。" : (summary.summary.length > 35 ? summary.summary.substring(0, 35) + '...' : summary.summary)}
+                                </p>
+                                {!isNoData && (
+                                  <Link href={`/topic/${summary.id}`} className="text-[10px] underline self-end font-bold">...もっと見る</Link>
+                                )}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="mt-6">
-                      <Link href={`/comparison/${topic.topic_id}`}>
-                          <button className="w-full bg-orange-300 font-bold py-3 rounded-md shadow text-gray-900">
-                            5カ国比較要約
-                          </button>
-                        </Link>
-                    </div>
+                        );
+                      })}
                   </div>
-                ))}
+
+                  <div className="mt-8">
+                    <Link href={`/comparison/${topic.topic_id}`}>
+                      <button className="w-full bg-orange-400 font-bold py-4 rounded-xl shadow-md text-white">5カ国比較レポートを見る</button>
+                    </Link>
+                  </div>
+                </div>
+              ))}
             </>
           )}
         </div>
