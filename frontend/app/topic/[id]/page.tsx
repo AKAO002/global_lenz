@@ -37,10 +37,15 @@ export default function TopicPage({
             Authorization: token ? `Bearer ${token}` : '',
           },
         });
-        if (!res.ok) throw new Error('データの取得に失敗しました');
-        const data = await res.json();
-        console.log('詳細データ受信:', data);
+        // 未ログインはログイン画面へ遷移
+        if (res.status === 401) {
+          router.push('/login'); // ← 未ログインは即遷移
+          return;
+        }
 
+        if (!res.ok) throw new Error('データの取得に失敗しました');
+
+        const data = await res.json();
         if (data && typeof data === 'object') {
           setTopic(data);
         } else {
