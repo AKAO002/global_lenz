@@ -3,15 +3,21 @@ from jose import jwt
 from fastapi import HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY")
-JWKS_URL = f"{SUPABASE_URL}/auth/v1/.well-known/jwks.json"
+security = HTTPBearer()
 ALGORITHMS = ["ES256"]
 
-security = HTTPBearer()
-
-# JWKS取得（キャッシュなし簡易版）
 async def get_jwks():
+    # 関数の「中」で環境変数を取得する
+    SUPABASE_URL = os.getenv("SUPABASE_URL")
+    SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY")
+
+    # もしここでも None なら、確実にここでエラーを止めて原因を特定する
+    if not SUPABASE_URL or not SUPABASE_ANON_KEY:
+        print(f"CRITICAL ERROR: URL={SUPABASE_URL}, KEY={SUPABASE_ANON_KEY}") # ログに出力
+        raise HTTPException(status_code=500, detail="Backend configuration error (Env vars missing)")
+
+    JWKS_URL = f"{SUPABASE_URL}/auth/v1/.well-known/jwks.json"
+
     async with httpx.AsyncClient() as client:
         res = await client.get(
             JWKS_URL,
@@ -20,9 +26,10 @@ async def get_jwks():
             }
         )
         return res.json()
-
 # JWT検証
 async def verify_jwt(token: str):
+    # URLを検証時にも使うため取得
+    supabase_url = os.getenv("SUPABASE_URL")
     jwks = await get_jwks()
 
     try:
@@ -43,9 +50,8 @@ async def verify_jwt(token: str):
             key,
             algorithms=ALGORITHMS,
             audience="authenticated",
-            issuer=f"{SUPABASE_URL}/auth/v1",
+            issuer=f"{supabase_url}/auth/v1",
         )
-
         return payload
 
     except Exception as e:

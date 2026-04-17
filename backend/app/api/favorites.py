@@ -28,14 +28,19 @@ def add_favorite(
     favorite: FavoriteCreate,
     user=Depends(get_current_user)
 ):
-
+    # 1. ユーザーIDの取得
     auth_id = user["id"]
-
     public_user_id = get_public_user_id(auth_id)
 
-    favorite_data= favorite.model_dump()
+    # 2. 受信データの確認（ここで中身が空じゃないかログに出す！）
+    print(f"DEBUG: フロントから届いたデータ: {favorite.model_dump()}")
 
+    # 3. データの準備
+    favorite_data = favorite.model_dump()
     favorite_data["user_id"] = public_user_id
+
+    # 4. 最終的にDBへ送るデータの確認
+    print(f"DEBUG: DBに送る直前のデータ: {favorite_data}")
 
     return create_favorite(favorite_data)
 
