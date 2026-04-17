@@ -57,7 +57,7 @@ def get_comparison_detail(comparison_id: int):
             )
             """
         )
-        .eq("id", comparison_id)
+        .eq("topic_id", comparison_id)
         .single()
         .execute()
     )
