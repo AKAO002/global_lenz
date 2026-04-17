@@ -66,30 +66,50 @@ export default function TopicPage({
     try {
       // ログインユーザーを取得
       const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return;
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        alert('ログインしてください');
+        return;
+      }
+
+      const token = session.access_token;
 
       if (isSaved) {
         // 削除処理
-        const { error } = await supabase
-          .from('favorites')
-          .delete()
-          .eq('user_id', user.id)
-          .eq('country_summary_id', parseInt(id));
-
-        if (error) throw error;
+        const response = await fetch(
+          `http://localhost:8000/api/favorites/${id}`,
+          {
+            method: 'DELETE',
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        if (!response.ok) throw new Error('削除に失敗しました');
 
         setIsSaved(false);
         showToast('ネタ帳から削除しました');
       } else {
         // 保存処理
-        const { error } = await supabase.from('favorites').insert({
-          user_id: user.id,
-          country_summary_id: parseInt(id),
+        const response = await fetch('http://localhost:8000/api/favorites/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`, // バックエンドの認証を通す
+          },
+          body: JSON.stringify({
+            country_summary_id: parseInt(id),
+          }),
         });
 
-        if (error) throw error;
+        if (!response.ok) {
+          const err = await response.json();
+          console.error('FastAPIエラー:', err);
+          alert('保存に失敗しました: ' + (err.detail || 'サーバーエラー'));
+          return;
+        }
 
         setIsSaved(true);
         showToast('ネタ帳に追加しました！');

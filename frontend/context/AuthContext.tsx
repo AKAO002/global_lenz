@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 
 type AuthContextType = {
   user: any;
+  session: any;
   loading: boolean;
   logout: () => Promise<void>;
 };
@@ -14,6 +15,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // 1. 初期値を undefined にして「まだ何もわからない」状態にする
   const [user, setUser] = useState<any | null | undefined>(undefined);
+  const [session, setSession] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -22,6 +24,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const {
         data: { session },
       } = await supabase.auth.getSession();
+      setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
     };
@@ -49,7 +52,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, logout }}>
+    <AuthContext.Provider value={{ user, session, loading, logout }}>
       {children}
     </AuthContext.Provider>
   );

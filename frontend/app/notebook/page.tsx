@@ -4,50 +4,48 @@
 import { useMemo, useState, useEffect } from 'react';
 import RequireAuth from '@/components/RequireAuth';
 import EmptyState from '@/components/notebook/EmptyState';
-import FavoriteCard from '@/components/notebook/FavoriteCard';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
-// ダミーデーた
-const mockFavoritesByTopic = [
-  {
-    id: 'topic_001',
-    date: '4/16 (水)',
-    topic_name: 'イラン情勢',
-    links: [
-      { label: '比較要約', url: '/compare/1' },
-      { label: '日本詳細', url: '/detail/jp' },
-      { label: 'アメリカ詳細', url: '/detail/us' },
-      { label: 'インド詳細', url: '/detail/in' },
-      { label: 'カタール詳細', url: '/detail/qa' },
-      { label: 'イギリス詳細', url: '/detail/uk' },
-    ],
-  },
-  {
-    id: 'topic_002',
-    date: '4/17 (木)',
-    topic_name: '宇宙ゴミ問題',
-    links: [
-      { label: '日本詳細', url: '/detail/jp2' },
-      { label: 'アメリカ詳細', url: '/detail/us2' },
-      { label: 'インド詳細', url: '/detail/in2' },
-    ],
-  },
-];
-
 export default function NotebookPage() {
-  const { logout } = useAuth();
+  const { logout, session } = useAuth();
   const router = useRouter();
 
-  const [items, setItems] = useState<any[]>(mockFavoritesByTopic);
+  const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   // const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
 
-  // localStorage からデータを読み込む
+  // --- DBからデータを取得する処理 ---
   useEffect(() => {
-    // const saved = JSON.parse(localStorage.getItem('global_lenz_notes') || '[]');
-    // setItems(saved);
-  }, []);
+    const fetchFavorites = async () => {
+      if (!session?.access_token) return;
+
+      try {
+        setLoading(true);
+        // バックエンドの「要約付きお気に入り一覧」エンドポイントを叩く
+        const res = await fetch(
+          `http://localhost:8000/api/favorites/with-summaries`,
+          {
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+            },
+          }
+        );
+
+        if (res.ok) {
+          const data = await res.json();
+          setItems(data);
+        }
+      } catch (error) {
+        console.error('ネタ帳の取得に失敗しました:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFavorites();
+  }, [session]);
 
   const handleLogout = async () => {
     try {
@@ -60,7 +58,9 @@ export default function NotebookPage() {
 
   const isEmpty = useMemo(() => items.length === 0, [items.length]);
 
-  const toggleSelect = (id: string, e: React.MouseEvent) => {
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+
+  const toggleSelect = (id: number, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setSelectedIds((prev) => {
@@ -71,13 +71,56 @@ export default function NotebookPage() {
     });
   };
 
-  const handleDeleteSelected = () => {
+  const handleDeleteSelected = async () => {
     if (selectedIds.size === 0) return;
-    const nextItems = items.filter((item) => !selectedIds.has(item.id));
-    setItems(nextItems);
-    localStorage.setItem('global_lenz_notes', JSON.stringify(nextItems));
-    setSelectedIds(new Set());
+    if (!session?.access_token) return;
+
+    if (!confirm(`${selectedIds.size}件のネタを削除してもよろしいですか？`))
+      return;
+
+    try {
+      // 選択された各IDに対して削除リクエストを送る
+      const deletePromises = Array.from(selectedIds).map((id) =>
+        fetch(`http://localhost:8000/api/favorites/${id}`, {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        })
+      );
+
+      await Promise.all(deletePromises);
+
+      // 画面上のリストからも消す
+      setItems((prev) => prev.filter((item) => !selectedIds.has(item.id)));
+      setSelectedIds(new Set());
+      alert('削除しました');
+    } catch (error) {
+      console.error('削除に失敗しました:', error);
+      alert('一部の削除に失敗しました');
+    }
   };
+
+  // 届いたデータをトピック名でグループ化する
+  const groupedTopics = items.reduce((acc: any[], current: any) => {
+    // すでに同じトピック名の箱があるか探す
+    const existingTopic = acc.find(
+      (item) => item.topic_name === current.topic_name
+    );
+
+    if (existingTopic) {
+      // あれば、その箱の links 配列に今のデータを追加
+      existingTopic.links.push(current);
+    } else {
+      // なければ、新しいトピックの箱を作る
+      acc.push({
+        topic_name: current.topic_name,
+        created_at: current.created_at,
+        links: [current],
+      });
+    }
+    return acc;
+  }, []);
 
   return (
     <RequireAuth>
@@ -91,29 +134,45 @@ export default function NotebookPage() {
               ネタ帳リスト
             </h1>
           </div>
-
           {isEmpty ? (
             <EmptyState />
           ) : (
             <div className="flex flex-col gap-5">
-              {items.map((topic) => (
+              {/* まとめた groupedTopics を使う */}
+              {groupedTopics.map((group: any, index: number) => (
                 <div
-                  key={topic.id}
-                  className="bg-[#D1EBD8] text-[#2D4A36] px-8 py-7 rounded-[45px] shadow-sm relative overflow-hidden"
+                  key={`group-${index}`}
+                  className="bg-[#D1EBD8] text-[#2D4A36] px-8 py-7 rounded-3xl shadow-sm relative overflow-hidden"
                 >
-                  {/* 日付とトピック名 */}
+                  {/* 日付とトピック名*/}
                   <div className="flex gap-4 font-bold text-[15px] mb-3">
-                    <span className="tabular-nums">{topic.date}</span>
-                    <span>{topic.topic_name}</span>
+                    <span className="tabular-nums">
+                      {group.created_at
+                        ? new Date(group.created_at).toLocaleDateString(
+                            'ja-JP',
+                            { month: 'numeric', day: 'numeric' }
+                          )
+                        : '--/--'}
+                    </span>
+                    <span>
+                      {group.country_summaries?.topic_name ||
+                        group.comparison_summary?.topic_name ||
+                        group.topic_name ||
+                        '読み込み中...'}
+                    </span>
                   </div>
 
-                  {/* リンク一覧 */}
-                  <div className="flex flex-wrap gap-x-4 gap-y-2">
-                    {topic.links.map((link, idx) => (
+                  {/* リンクをまとまって表示 */}
+                  <div className="flex flex-wrap gap-2">
+                    {group.links.map((link: any) => (
                       <Link
-                        key={idx}
-                        href={link.url}
-                        className="text-[14px] font-medium border-b border-black/40 hover:border-black transition-all"
+                        key={link.favorite_id}
+                        href={
+                          link.type === 'country'
+                            ? `/topic/${link.target_id}`
+                            : `/comparison/${link.target_id}`
+                        }
+                        className="px-4 py-1.5 bg-white/60 text-[#2D4A36] rounded-lg text-[14px] border border-[#2D4A36]/10 hover:bg-white transition-colors"
                       >
                         {link.label}
                       </Link>
@@ -122,7 +181,7 @@ export default function NotebookPage() {
                 </div>
               ))}
             </div>
-          )}
+          )}{' '}
         </div>
 
         <div className="mx-auto mt-8 w-full max-w-2xl">
