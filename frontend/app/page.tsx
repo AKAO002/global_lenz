@@ -25,6 +25,7 @@ export default function HomePage() {
   const [activeTab, setActiveTab] = useState<number | null>(null);
   const [searchKeyword, setSearchKeyword] = useState(query || '');
   const [loading, setLoading] = useState(false);
+  const [today, setToday] = useState('');
 
   // useEffect 内のロジックを整理
   useEffect(() => {
@@ -112,6 +113,16 @@ export default function HomePage() {
     fetchSummaries();
   }, [query]);
 
+  useEffect(() => {
+    const dateStr = new Date().toLocaleDateString('ja-JP', {
+      month: 'numeric',
+      day: 'numeric',
+      weekday: 'short',
+    });
+
+    setToday(dateStr);
+  }, []);
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchKeyword.trim()) return;
@@ -134,11 +145,7 @@ export default function HomePage() {
         <header className="p-4 px-6 flex items-center justify-between gap-4">
           {/* 日付：text-lg に少しサイズダウンして馴染ませる */}
           <h1 className="text-lg font-bold text-gray-800 whitespace-nowrap tracking-tight">
-            {new Date().toLocaleDateString('ja-JP', {
-              month: 'numeric',
-              day: 'numeric',
-              weekday: 'short',
-            })}
+            {today}
           </h1>
 
           {/* 検索フォーム：max-w-[200px] で大きさを制限し、ml-auto で右側に寄せる */}
