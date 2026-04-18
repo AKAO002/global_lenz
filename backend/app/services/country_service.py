@@ -132,7 +132,10 @@ def get_home_country_summaries(is_login: bool,auth_user_id: str | None):
             topic_name,
             created_at,
             comparison_summaries (
-                id
+                id,
+                comparison_summary_articles (
+                    id
+                )
             ),
 
             country_summaries (
@@ -186,10 +189,21 @@ def get_home_country_summaries(is_login: bool,auth_user_id: str | None):
             })
         
         comp_id = None
-        if "comparison_summaries" in topic and len(topic["comparison_summaries"]) > 0:
-            # 最初の1件のIDを取得
-            comp_id = topic["comparison_summaries"][0]["id"]
+        is_comparison_favoritable = False
 
+        if (
+            "comparison_summaries" in topic 
+            and len(topic["comparison_summaries"]) > 0
+        ):
+            # 最初の1件のIDを取得
+            comp = topic["comparison_summaries"][0]
+            comp_id = comp["id"]
+
+            articles = comp.get("comparison_summary_articles")
+
+            if articles:
+                is_comparison_favoritable = True
+                        
         results.append({
 
             "topic_id": topic["id"],
@@ -197,6 +211,8 @@ def get_home_country_summaries(is_login: bool,auth_user_id: str | None):
             "topic_name": topic["topic_name"],
 
             "comparison_id": comp_id,
+
+            "is_comparison_favoritable": is_comparison_favoritable,
 
             "created_at": topic["created_at"],
 
