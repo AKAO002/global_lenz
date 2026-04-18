@@ -149,12 +149,12 @@ export default function NotebookPage() {
       <div className="relative min-h-screen bg-brand-canvas p-4 pb-28">
         <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col">
           {/* --- ヘッダー部分 --- */}
-          <div className="mb-6 flex items-center justify-center">
-            {' '}
-            {/* justify-between から center へ変更 */}
+          <div className="relative mb-8 flex items-center justify-center py-2">
+            {/* タイトル */}
             <h1 className="text-xl font-bold tracking-tight text-brand-text">
               ネタ帳リスト
             </h1>
+            {/* 編集ボタン */}
             <button
               onClick={() => {
                 if (isEditMode) {
@@ -163,9 +163,9 @@ export default function NotebookPage() {
                   setIsEditMode(true); // モード中でなければ編集開始
                 }
               }}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+              className={`absolute right-0 top-1/2 -translate-y-1/2 px-3 py-1 rounded-full text-xs font-bold transition-all shadow-sm outline-none focus:ring-0 ${
                 isEditMode
-                  ? 'bg-red-500 text-white hover:bg-red-600' // 実行ボタン
+                  ? 'bg-orange-400 text-white hover:bg-orange-400' // 実行ボタン
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200' // 編集開始ボタン
               }`}
             >
@@ -213,7 +213,7 @@ export default function NotebookPage() {
                             onClick={() => toggleSelect(link.favorite_id)}
                             className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-[14px] border transition-all ${
                               selectedIds.has(link.favorite_id)
-                                ? 'bg-red-500 text-white border-red-600'
+                                ? 'bg-orange-400 text-white border-orange-400'
                                 : 'bg-white/40 text-[#2D4A36] border-[#2D4A36]/10'
                             }`}
                           >
@@ -221,7 +221,7 @@ export default function NotebookPage() {
                               type="checkbox"
                               readOnly
                               checked={selectedIds.has(link.favorite_id)}
-                              className="pointer-events-none h-3 w-3 accent-red-600"
+                              className="pointer-events-none h-3 w-3 accent-orange-600"
                             />
                             {link.label}
                           </button>
@@ -246,26 +246,16 @@ export default function NotebookPage() {
           )}
         </div>
 
-        <div className="mx-auto mt-8 w-full max-w-2xl">
+        {/* ログアウトボタン */}
+        <div className="mx-auto mt-8 w-full flex justify-center">
           <button
             type="button"
             onClick={handleLogout}
-            className="w-full rounded-full border border-emerald-200/90 bg-emerald-50 py-2.5 text-sm font-medium text-emerald-900"
+            className="w-auto px-10 py-2 rounded-full border border-emerald-200/90 bg-emerald-50 py-2.5 text-sm font-medium text-emerald-900"
           >
             ログアウト
           </button>
         </div>
-
-        {/* {!isEmpty && (
-          <button
-            type="button"
-            onClick={handleDeleteSelected}
-            disabled={selectedIds.size === 0}
-            className="fixed bottom-20 right-4 z-40 rounded-full border border-violet-200/90 bg-violet-100 px-5 py-2.5 text-sm font-medium text-violet-900 shadow-lg"
-          >
-            削除 {selectedIds.size > 0 ? ` (${selectedIds.size})` : ''}
-          </button>
-        )} */}
       </div>
     </RequireAuth>
   );
