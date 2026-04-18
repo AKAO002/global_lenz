@@ -42,7 +42,7 @@ def add_favorite(
 #  ネタ帳から削除
 @router.delete("/{favorite_id}")
 def remove_favorite(
-    favorite_id: int,
+    favorite_id: str,
     user=Depends(get_current_user)
 ):
 

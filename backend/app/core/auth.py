@@ -1,11 +1,13 @@
 import httpx,os
 from jose import jwt
-from fastapi import HTTPException, Depends
+from fastapi import HTTPException, Depends,  status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-security = HTTPBearer()
-ALGORITHMS = ["ES256"]
 
+ALGORITHMS = ["ES256"]
+security = HTTPBearer(auto_error=False)
+
+# JWKS取得（キャッシュなし簡易版）
 async def get_jwks():
     # 関数の「中」で環境変数を取得する
     SUPABASE_URL = os.getenv("SUPABASE_URL")
@@ -58,14 +60,49 @@ async def verify_jwt(token: str):
         raise HTTPException(status_code=401, detail=str(e))
 
 
-# FastAPI dependency
+# 必須ログイン用
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
 ):
-    token = credentials.credentials
-    payload = await verify_jwt(token)
+    print("DEBUG credentials:", credentials)
 
-    return {
-        "id": payload.get("sub"),
-        "email": payload.get("email"),
-    }
+
+    if credentials is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated"
+        )
+
+    try:
+        token = credentials.credentials
+
+        payload = await verify_jwt(token)
+
+        return {
+            "id": payload.get("sub"),
+            "email": payload.get("email"),
+        }
+
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token"
+        )
+
+# 任意ログイン用
+async def get_current_user_optional(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+):
+
+    if not credentials:
+        return None
+
+    try:
+        token = credentials.credentials
+
+        payload = await verify_jwt(token)
+
+        return payload
+
+    except Exception:
+        return None

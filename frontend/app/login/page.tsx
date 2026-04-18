@@ -37,7 +37,7 @@ function LoginContent() {
     }
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -47,6 +47,9 @@ function LoginContent() {
         return;
       }
 
+      if (data.session) {
+        localStorage.setItem('access_token', data.session.access_token);
+      }
       router.push(redirect);
     } catch (error) {
       console.error(error);

@@ -1,4 +1,5 @@
-from fastapi import APIRouter,HTTPException
+from fastapi import APIRouter, HTTPException, Depends
+from app.core.auth import (get_current_user_optional,get_current_user) 
 
 from app.services.country_service import (
     get_country_summaries,
@@ -11,9 +12,20 @@ router = APIRouter()
 
 # ホーム一覧
 @router.get("/home")
-def read_home_country_summaries():
+def read_home_country_summaries(
+    user=Depends(get_current_user_optional)
+):
+    is_login = user is not None
 
-    return get_home_country_summaries()
+    data = get_home_country_summaries(
+        is_login=is_login,
+        auth_user_id=user["sub"] if user else None
+    )
+
+    return {
+        "is_login": is_login,
+        "data": data
+    }
 
 # 一覧取得
 @router.get("")
@@ -35,9 +47,12 @@ def read_country_summary(id: int):
 
     return data
 
-# 詳細取得
+# 詳細取得(ログイン必須)
 @router.get("/{id}/detail")
-def read_country_detail(id: int):
+def read_country_detail(
+    id: int,
+    user=Depends(get_current_user),
+    ):
 
     result = get_country_detail(id)
 
