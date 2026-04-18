@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useSearchParams, useRouter } from 'next/navigation';
+import HomeStylePageLoading from '@/components/ui/HomeStylePageLoading';
 
 // 国画像
 const flagImages: { [key: string]: string } = {
@@ -118,12 +119,11 @@ useEffect(() => {
   const activeTopic = summaries.find((t: any) => t.topic_id === activeTab);
 
   return (
-    <div className="bg-[#FDFBF6] min-h-screen pb-24">
-      <div className="max-w-md mx-auto min-h-screen bg-white shadow-lg relative">
-        
-{/* 日付 + 検索窓 を横並びに修正 */}
-{/* ヘッダー全体：px-6 に広げて日付を少し内側へ */}
-        <header className="p-4 px-6 flex items-center justify-between gap-4">
+    <div className="-mx-6 min-h-screen bg-brand-canvas pb-24">
+      <div className="relative mx-auto min-h-screen w-full max-w-md rounded-b-3xl bg-brand-surface text-brand-text shadow-soft sm:rounded-b-[2rem]">
+        {/* 日付 + 検索窓 を横並びに修正 */}
+        {/* ヘッダー全体：px-6 に広げて日付を少し内側へ */}
+        <header className="flex items-center justify-between gap-4 p-4 px-6">
           {/* 日付：text-lg に少しサイズダウンして馴染ませる */}
           <h1 className="text-lg font-bold text-gray-800 whitespace-nowrap tracking-tight">
             {new Date().toLocaleDateString('ja-JP', {
@@ -168,43 +168,9 @@ useEffect(() => {
 
         <div className="px-4">
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-20 px-6">
-              {/* 1. アニメーションアイコン（知的な回転体） */}
-              <div className="relative w-16 h-16 mb-6">
-                <div className="absolute inset-0 border-4 border-orange-100 rounded-full"></div>
-                <div className="absolute inset-0 border-4 border-t-orange-400 rounded-full animate-spin"></div>
-                <div className="absolute inset-2 border-4 border-b-blue-300 rounded-full animate-[spin_1.5s_linear_infinite_reverse]"></div>
-              </div>
-              
-              {/* 2. テキスト演出 */}
-              <div className="text-center space-y-2">
-                <h2 className="text-xl font-bold text-gray-800 animate-pulse">
-                  AIが世界中を分析中...
-                </h2>
-                <div className="flex flex-col items-center">
-                  <p className="text-sm text-gray-500 font-medium">
-                    「{searchKeyword}」に関する視点を抽出しています
-                  </p>
-                  <p className="text-[10px] text-gray-400 mt-4 tracking-widest uppercase">
-                    Fetching from Global Media
-                  </p>
-                </div>
-              </div>
-
-              {/* 3. プログレスバー（視覚的な進捗感） */}
-              <div className="mt-8 w-full max-w-[200px] h-1 bg-gray-100 rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-orange-300 to-orange-500 animate-[loading-bar_3s_infinite]"></div>
-              </div>
-
-              {/* Tailwind CSSのカスタムアニメーションをインラインで追加 */}
-              <style dangerouslySetInnerHTML={{ __html: `
-                @keyframes loading-bar {
-                  0% { transform: translateX(-100%); }
-                  50% { transform: translateX(0); }
-                  100% { transform: translateX(100%); }
-                }
-              `}} />
-            </div>
+            <HomeStylePageLoading
+              detailLine={`「${searchKeyword}」に関する視点を抽出しています`}
+            />
           ) : (
             <>
               <div className="text-center mb-6">
@@ -229,7 +195,7 @@ useEffect(() => {
                               {!isNoData && <span className="text-[11px] text-yellow-500">{'★'.repeat(summary.recommend_score || 0)}</span>}
                             </div>
 
-                            <div className="relative rounded-sm overflow-hidden border border-gray-100 h-[170px] bg-gray-50">
+                            <div className="relative h-[170px] overflow-hidden rounded-sm border border-brand-border bg-brand-accent-softer">
                               {flagImages[summary.country_name] && (
                                 <Image src={flagImages[summary.country_name]} alt={summary.country_name} fill className="object-cover mix-blend-multiply opacity-20" />
                               )}

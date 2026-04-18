@@ -8,8 +8,8 @@ type UsefulLinksModalProps = {
 };
 
 const LINKS = [
-  { label: '外務省 安全情報', href: 'https://www.anzen.mofa.go.jp/' },
-  { label: '各国の天気', href: 'https://www.accuweather.com/' },
+  { emoji: '🌍', label: '外務省 安全情報', href: 'https://www.anzen.mofa.go.jp/' },
+  { emoji: '☀️', label: '各国の天気', href: 'https://www.accuweather.com/' },
 ] as const;
 
 export default function UsefulLinksModal({ open, onClose }: UsefulLinksModalProps) {
@@ -31,7 +31,7 @@ export default function UsefulLinksModal({ open, onClose }: UsefulLinksModalProp
       <button
         type="button"
         aria-label="モーダルを閉じる"
-        className="absolute inset-0 bg-black/25"
+        className="absolute inset-0 bg-brand-canvas/70 backdrop-blur-sm"
         onClick={onClose}
       />
 
@@ -39,7 +39,7 @@ export default function UsefulLinksModal({ open, onClose }: UsefulLinksModalProp
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="relative z-10 w-full max-w-md rounded-2xl border border-brand-border bg-brand-surface shadow-soft"
+        className="relative z-10 w-full max-w-md rounded-[1.5rem] border border-brand-border bg-brand-surface shadow-soft"
       >
         <div className="flex items-center justify-between border-b border-brand-border px-4 py-3">
           <h2 id={titleId} className="text-base font-semibold text-brand-text">
@@ -49,7 +49,7 @@ export default function UsefulLinksModal({ open, onClose }: UsefulLinksModalProp
             type="button"
             onClick={onClose}
             aria-label="閉じる"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full text-lg text-brand-text transition-all duration-200 hover:scale-105 hover:bg-blue-100"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full text-lg text-brand-text transition-all duration-200 hover:scale-105 hover:bg-brand-accent-soft"
           >
             ×
           </button>
@@ -62,8 +62,11 @@ export default function UsefulLinksModal({ open, onClose }: UsefulLinksModalProp
               href={link.href}
               target="_blank"
               rel="noopener noreferrer"
-              className="block rounded-xl border border-brand-border bg-brand-canvas px-4 py-3 text-sm font-medium leading-relaxed text-brand-accent transition-all duration-200 hover:scale-[1.01] hover:bg-blue-100"
+              className="block rounded-2xl border border-brand-border/80 bg-brand-accent-softer px-4 py-3.5 text-sm font-medium leading-relaxed text-brand-text shadow-sm transition-all duration-200 hover:scale-[1.01] hover:bg-brand-accent-soft"
             >
+              <span className="mr-2" aria-hidden>
+                {link.emoji}
+              </span>
               {link.label}
             </a>
           ))}

@@ -1,42 +1,114 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-  /* Global Lens ブランド（共通 UI 用） */
-  --brand-surface: #ffffff;
-  --brand-border: #e5e1da;
-  --brand-canvas: #f7f5f0;
-  --brand-muted: #6b6560;
-  --brand-text: #2c2c2c;
-  --brand-accent: #7895b2;
-  --brand-accent-deep: #4a667d;
+  /* 北欧モダン調：深みのある温かいネイビー × アイボリー × くすみグリーン */
+
+  --brand-canvas: #2c3e50;
+
+  --brand-surface: #fcf9f1;
+
+  --brand-border: #e3ddd2;
+
+  --brand-border-muted: rgb(255 255 255 / 0.14);
+
+  /* アイボリー上の本文（真っ黒にしない・濃い藍色） */
+
+  --brand-text: #1a2632;
+
+  --brand-muted: #5c6b7c;
+
+  /* ネイビー背景上の文字 */
+
+  --brand-on-canvas: #ebe8df;
+
+  --brand-on-canvas-muted: #9eb0c1;
+
+  /* ポイント：リンゴの葉のようなくすみグリーン */
+
+  --brand-accent: #72b7a8;
+
+  --brand-accent-deep: #4a9387;
+
+  --brand-accent-soft: rgb(114 183 168 / 0.22);
+
+  --brand-accent-softer: rgb(114 183 168 / 0.12);
+
+  --background: var(--brand-canvas);
+
+  --foreground: var(--brand-on-canvas);
 }
 
 @theme inline {
   --color-background: var(--background);
+
   --color-foreground: var(--foreground);
+
   --color-brand-surface: var(--brand-surface);
-  --color-brand-border: var(--brand-border);
+
   --color-brand-canvas: var(--brand-canvas);
-  --color-brand-muted: var(--brand-muted);
+
+  --color-brand-border: var(--brand-border);
+
+  --color-brand-border-muted: var(--brand-border-muted);
+
   --color-brand-text: var(--brand-text);
+
+  --color-brand-muted: var(--brand-muted);
+
+  --color-brand-on-canvas: var(--brand-on-canvas);
+
+  --color-brand-on-canvas-muted: var(--brand-on-canvas-muted);
+
   --color-brand-accent: var(--brand-accent);
+
   --color-brand-accent-deep: var(--brand-accent-deep);
-  --shadow-soft: 0 2px 12px rgb(44 44 44 / 0.06);
+
+  --color-brand-accent-soft: var(--brand-accent-soft);
+
+  --color-brand-accent-softer: var(--brand-accent-softer);
+
+  --shadow-soft: 0 4px 28px rgb(0 0 0 / 0.14);
+
   --font-sans: var(--font-geist-sans);
+
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+body {
+  background: var(--brand-canvas);
+
+  color: var(--brand-on-canvas);
+
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* 用語解説モーダル：開くときのパッとした見え方 */
+@keyframes glossary-modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@keyframes backdrop-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@layer utilities {
+  .animate-glossary-modal-in {
+    animation: glossary-modal-in 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .animate-backdrop-fade-in {
+    animation: backdrop-fade-in 0.16s ease-out both;
+  }
 }
