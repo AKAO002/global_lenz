@@ -176,7 +176,12 @@ export default function NotebookPage() {
                 : '編集'}
             </button>
           </div>
-          {isEmpty ? (
+
+          {loading ? (
+            <div className="flex justify-center pt-20 text-gray-400">
+              読み込み中...
+            </div>
+          ) : isEmpty ? (
             <EmptyState />
           ) : (
             <div className="flex flex-col gap-5">
