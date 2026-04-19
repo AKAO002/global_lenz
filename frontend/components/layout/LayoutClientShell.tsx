@@ -17,7 +17,7 @@ export default function LayoutClientShell({
 
   return (
     <>
-      <main className="flex-1 pb-15">{children}</main>
+      <main className="flex-1 pb-16">{children}</main>
       <BottomNav
         onOpenLinks={() => setIsLinksOpen(true)}
         onOpenAbout={() => setIsAboutOpen(true)}
