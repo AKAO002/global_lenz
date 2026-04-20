@@ -4,6 +4,7 @@
 import React, { useState, useEffect, useId, useMemo, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { deleteFavorite } from '@/lib/api/favorites';
 import { normalizeDifficultWords } from '@/lib/normalizeDifficultWords';
 import {
   DifficultWordsGlossaryModal,
@@ -93,11 +94,12 @@ export default function ComparePage() {
       if (isSaved) {
         // 削除処理
         console.log('ネタ帳から削除中...');
-        const res = await fetch(`http://localhost:8000/api/favorites/${id}`, {
-          method: 'DELETE',
-          headers: { Authorization: `Bearer ${token}` },
+
+        await deleteFavorite({
+          token,
+          id,
+          type: 'comparison',
         });
-        if (!res.ok) throw new Error('削除に失敗しました');
 
         // DB状態を再取得
         await fetchComparisonData();
@@ -211,7 +213,9 @@ export default function ComparePage() {
         </header>
 
         <div className="space-y-6">
-          <p className="mb-6 text-center font-bold text-brand-text">5カ国比較要約</p>
+          <p className="mb-6 text-center font-bold text-brand-text">
+            5カ国比較要約
+          </p>
 
           {comparison ? (
             <div className="space-y-6">
@@ -245,7 +249,9 @@ export default function ComparePage() {
                     >
                       {/* URL表示 */}
                       <div className="text-xs text-brand-muted">
-                        <span className="font-semibold text-brand-text">引用元:</span>
+                        <span className="font-semibold text-brand-text">
+                          引用元:
+                        </span>
 
                         <span className="ml-1">{country.media_name}</span>
 

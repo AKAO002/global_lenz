@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import RequireAuth from '@/components/RequireAuth';
+import { deleteFavorite } from '@/lib/api/favorites';
 import Image from 'next/image';
 
 // 国画像
@@ -96,16 +97,16 @@ export default function TopicPage({
 
       if (isSaved) {
         // 削除処理
-        const response = await fetch(
-          `http://localhost:8000/api/favorites/${id}`,
-          {
-            method: 'DELETE',
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        if (!response.ok) throw new Error('削除に失敗しました');
+        console.log('ネタ帳から削除中...');
+
+        const isComparisonPage =
+          window.location.pathname.includes('comparison');
+
+        await deleteFavorite({
+          token,
+          id,
+          type: isComparisonPage ? 'comparison' : 'country',
+        });
 
         setIsSaved(false);
         showToast('ネタ帳から削除しました');
