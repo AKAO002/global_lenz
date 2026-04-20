@@ -1,7 +1,7 @@
 from fastapi import FastAPI,Depends
 from fastapi.middleware.cors import CORSMiddleware
 from app.app_api import router as api_router
-from app.core.auth import get_current_user
+from app.core.auth import get_current_user,get_current_user_optional
 
 app = FastAPI()
 
@@ -28,3 +28,12 @@ def root():
 @app.get("/api/me")
 async def get_me(user=Depends(get_current_user)):
     return user
+
+# テスト用API
+@app.get("/test-optional")
+def test_optional(
+    user=Depends(get_current_user_optional)
+):
+    return {
+        "user": user
+    }
