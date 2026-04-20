@@ -138,7 +138,7 @@ export default function HomePage() {
   // --------------------
 
   return (
-    <div className="bg-[#FDFBF6] min-h-screen pb-24">
+    <div className="bg-[#FDFBF6] min-h-screen">
       <div className="max-w-md mx-auto min-h-screen bg-white shadow-lg relative">
         {/* 日付 + 検索窓 を横並びに修正 */}
         {/* ヘッダー全体：px-6 に広げて日付を少し内側へ */}
