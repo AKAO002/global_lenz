@@ -91,5 +91,5 @@ async def get_current_user_optional(
 
         return payload
 
-    except Exception:
+    except Exception as e:
         return None

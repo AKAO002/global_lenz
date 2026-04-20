@@ -28,7 +28,7 @@ def get_country_summary_by_id(summary_id: int):
 
     return response.data
 
-def get_country_detail(country_id: int):
+def get_country_detail(country_id: int,public_user_id: str | None = None):
 
     response = (
         supabase
@@ -53,7 +53,7 @@ def get_country_detail(country_id: int):
             """
         )
         .eq("id", country_id)
-        .single()
+        .maybe_single()
         .execute()
     )
 
@@ -77,10 +77,27 @@ def get_country_detail(country_id: int):
         .execute()
     )
 
-    url = None
+    url = article_res.data[0]["url"] if article_res.data else None
 
-    if article_res.data:
-        url = article_res.data[0]["url"]
+     # favorites判定
+
+    is_already_saved = False
+
+    if public_user_id:
+
+        fav = (
+            supabase
+            .table("favorites")
+            .select("id")
+            .eq("user_id", public_user_id)
+            .eq("country_summary_id", country_id)
+            .limit(1)
+            .maybe_single()
+            .execute()
+        )
+
+        if fav and fav.data:
+            is_already_saved = True
 
     return {
 
@@ -106,7 +123,10 @@ def get_country_detail(country_id: int):
             data["country_summary"],
 
         "url":
-            url
+            url,
+
+        "is_already_saved": 
+            is_already_saved
     }
 
 def get_home_country_summaries(is_login: bool,auth_user_id: str | None):
