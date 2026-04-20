@@ -65,60 +65,70 @@ function RegisterContent() {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-10">
-      <h2 className="text-2xl font-bold mb-6">新規登録</h2>
+    <div className="mx-auto mt-10 max-w-md px-4">
+      <div className="card-on-canvas rounded-3xl border border-brand-border/80 p-6 sm:p-8">
+        <h2 className="mb-6 text-2xl font-bold text-brand-text">新規登録</h2>
 
-      {/* エラーメッセージ表示エリア */}
-      {errorMessage && (
-        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded text-sm">
-          {errorMessage}
+        {errorMessage && (
+          <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+            {errorMessage}
+          </div>
+        )}
+
+        <div className="mb-4">
+          <label className="mb-1 block text-sm font-medium text-brand-text">
+            メールアドレス
+          </label>
+          <input
+            type="email"
+            className="w-full rounded-2xl border border-brand-border bg-brand-surface px-3 py-2 text-brand-text outline-none ring-brand-accent-secondary/30 focus:ring-2"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
         </div>
-      )}
 
-      <div className="mb-4">
-        <label className="block mb-1">メールアドレス</label>
-        <input
-          type="email"
-          className="w-full border p-2 rounded"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
+        <div className="mb-4">
+          <label className="mb-1 block text-sm font-medium text-brand-text">
+            パスワード（8文字以上）
+          </label>
+          <input
+            type="password"
+            className="w-full rounded-2xl border border-brand-border bg-brand-surface px-3 py-2 text-brand-text outline-none ring-brand-accent-secondary/30 focus:ring-2"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </div>
+
+        <div className="mb-4">
+          <label className="mb-1 block text-sm font-medium text-brand-text">
+            パスワード（確認用）
+          </label>
+          <input
+            type="password"
+            className="w-full rounded-2xl border border-brand-border bg-brand-surface px-3 py-2 text-brand-text outline-none ring-brand-accent-secondary/30 focus:ring-2"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+          />
+        </div>
+
+        <button
+          type="button"
+          onClick={handleRegister}
+          className="w-full rounded-3xl bg-brand-accent p-3 font-semibold text-white transition-opacity hover:opacity-95"
+        >
+          登録
+        </button>
+
+        <p className="mt-4 text-sm text-brand-muted">
+          すでにアカウントがある場合は
+          <Link
+            href="/login"
+            className="ml-1 font-medium text-brand-accent-secondary underline"
+          >
+            ログイン
+          </Link>
+        </p>
       </div>
-
-      <div className="mb-4">
-        <label className="block mb-1">パスワード（8文字以上）</label>
-        <input
-          type="password"
-          className="w-full border p-2 rounded"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-      </div>
-
-      {/* パスワード確認入力欄 */}
-      <div className="mb-4">
-        <label className="block mb-1">パスワード（確認用）</label>
-        <input
-          type="password"
-          className="w-full border p-2 rounded"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-        />
-      </div>
-
-      <button
-        onClick={handleRegister}
-        className="bg-green-600 text-white w-full p-2 rounded"
-      >
-        登録
-      </button>
-
-      <p className="mt-4 text-sm">
-        すでにアカウントがある場合は
-        <Link href="/login" className="text-blue-600 ml-1">
-          ログイン
-        </Link>
-      </p>
     </div>
   );
 }
@@ -126,7 +136,11 @@ function RegisterContent() {
 export default function RegisterPage() {
   return (
     <Suspense
-      fallback={<div className="mx-auto mt-10 max-w-md">読み込み中...</div>}
+      fallback={
+        <div className="mx-auto mt-10 max-w-md px-4 text-center text-brand-muted">
+          読み込み中...
+        </div>
+      }
     >
       <RegisterContent />
     </Suspense>
