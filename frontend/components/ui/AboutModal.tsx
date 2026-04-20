@@ -83,7 +83,7 @@ export default function AboutModal({ open, onClose }: AboutModalProps) {
       <button
         type="button"
         aria-label="背景をクリックして閉じる"
-        className="absolute inset-0 bg-brand-text/20"
+        className="absolute inset-0 bg-brand-text/25 backdrop-blur-sm"
         onClick={onClose}
       />
 

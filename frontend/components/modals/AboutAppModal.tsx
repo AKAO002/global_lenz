@@ -22,11 +22,11 @@ export default function AboutAppModal({ open, onClose }: AboutAppModalProps) {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:items-center">
       <button
         type="button"
         aria-label="モーダルを閉じる"
-        className="absolute inset-0 bg-brand-text/25"
+        className="absolute inset-0 bg-brand-text/25 backdrop-blur-sm"
         onClick={onClose}
       />
 

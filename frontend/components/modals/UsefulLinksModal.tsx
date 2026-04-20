@@ -94,7 +94,7 @@ export default function UsefulLinksModal({
       <button
         type="button"
         aria-label="モーダルを閉じる"
-        className="absolute inset-0 bg-brand-text/20 backdrop-blur-sm"
+        className="absolute inset-0 bg-brand-text/25 backdrop-blur-sm"
         onClick={onClose}
       />
 
