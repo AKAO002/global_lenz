@@ -84,7 +84,6 @@ export default function ComparePage() {
 
       const token = session.access_token;
       // 保存処理
-      console.log('ネタ帳に追加中...');
       const isComparisonPage = window.location.pathname.includes('comparison');
       const realId = comparison?.comparison_id || comparison?.id;
 
@@ -162,8 +161,8 @@ export default function ComparePage() {
             onClick={handleSaveToNotebook}
             className={`flex items-center justify-center w-10 h-10 rounded-full transition-colors ${
               isSaved
-                ? 'bg-brand-accent-soft text-brand-accent-deep' // 保存済み
-                : 'text-brand-muted hover:bg-brand-accent-softer hover:text-brand-text' // 未保存
+                ? 'bg-[#E8603C]/10 text-[#E8603C]' // 保存済み
+                : 'text-gray-400 hover:bg-[#E8603C]/5 hover:text-[#E8603C]' // 未保存
             }`}
             title={isSaved ? '保存済み' : 'ネタ帳に追加'}
             disabled={isSaved} // buttonタグ自体も無効化
@@ -187,12 +186,14 @@ export default function ComparePage() {
         </header>
 
         <div className="space-y-6">
-          <p className="mb-6 text-center font-bold text-brand-text">5カ国比較要約</p>
+          <p className="mb-6 text-center font-bold text-brand-text">
+            5カ国比較要約
+          </p>
 
           {comparison ? (
             <div className="space-y-6">
               {/* 比較要約 */}
-              <div className="border-l-4 border-brand-accent-secondary py-2 pl-4">
+              <div className="border-l-4 border-[#E8603C] py-2 pl-4">
                 <h2 className="mb-2 font-bold text-brand-text">
                   {comparison.topic_name}
                 </h2>
@@ -217,24 +218,21 @@ export default function ComparePage() {
                   .map((country: any, index: number) => (
                     <div
                       key={index}
-                      className="rounded-3xl border border-brand-border/70 bg-brand-accent-softer/30 p-4"
+                      className="text-xs text-gray-500 border rounded-lg p-4 bg-gray-50"
                     >
-                      {/* URL表示 */}
-                      <div className="text-xs text-brand-muted">
-                        <span className="font-semibold text-brand-text">引用元:</span>
+                      {/* 引用元 */}
+                      <span className="font-semibold">引用元</span>
+                      <span className="ml-1">{country.media_name}</span>
 
-                        <span className="ml-1">{country.media_name}</span>
-
-                        <div className="mt-1">
-                          <a
-                            href={country.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="break-all text-brand-accent-secondary underline"
-                          >
-                            {country.url}
-                          </a>
-                        </div>
+                      <div className="mt-1">
+                        <a
+                          href={country.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="underline break-all"
+                        >
+                          {country.url}
+                        </a>
                       </div>
                     </div>
                   ))}
@@ -310,14 +308,13 @@ export default function ComparePage() {
         </div>
       )}
 
-      {/* トースト通知 */}
+      {/* トースト表示 */}
       {toast.visible && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-bottom-4 duration-300">
-          <div className="flex items-center gap-2 rounded-full border border-brand-border bg-brand-surface px-6 py-3 text-sm font-medium text-brand-text shadow-lg backdrop-blur-md">
-            {/* チェックアイコン */}
+        <div className="fixed bottom-28 left-1/2 -translate-x-1/2 z-[110] animate-in fade-in slide-in-from-bottom-4 duration-300">
+          <div className="bg-[#E8603C] text-white px-7 py-3.5 rounded-full shadow-2xl text-sm font-bold flex items-center gap-2">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-4 w-4 text-brand-accent"
+              className="h-5 w-5 text-white"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -325,11 +322,13 @@ export default function ComparePage() {
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                strokeWidth={2}
+                strokeWidth={3}
                 d="M5 13l4 4L19 7"
               />
             </svg>
-            {toast.message}
+            <span className="text-xs font-bold whitespace-nowrap overflow-hidden text-ellipsis">
+              {toast.message}
+            </span>
           </div>
         </div>
       )}

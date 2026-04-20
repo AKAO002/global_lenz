@@ -139,19 +139,19 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-brand-canvas">
-      <div className="relative mx-auto min-h-screen w-full max-w-md rounded-b-3xl border border-brand-border/50 bg-brand-canvas text-brand-text shadow-soft sm:rounded-b-[2rem]">
-        {/* 日付 + 検索窓 を横並びに修正 */}
-        {/* ヘッダー全体：px-6 に広げて日付を少し内側へ */}
+      <div className="relative mx-auto min-h-screen w-full max-w-md border border-brand-border/50 bg-brand-canvas text-brand-text shadow-soft sm:rounded-b-[2rem]">
+        {/* 日付 + 検索窓 */}
+        {/* ヘッダー全体 */}
         <header className="p-4 px-6 flex items-center justify-between gap-4">
-          {/* 日付：text-lg に少しサイズダウンして馴染ませる */}
+          {/* 日付 */}
           <h1 className="whitespace-nowrap text-lg font-bold tracking-tight text-brand-text">
             {today}
           </h1>
 
-          {/* 検索フォーム：max-w-[200px] で大きさを制限し、ml-auto で右側に寄せる */}
           <form
             onSubmit={handleSearch}
-            className="ml-auto flex max-w-[180px] flex-grow items-center rounded-full border border-brand-border/60 bg-brand-canvas/80 px-3 py-1.5 transition-all focus-within:border-brand-accent-secondary/40"
+            /* 🌟 borderの色を [#028090] に固定し、少し太さを持たせたい場合は border-2 に変更 */
+            className="ml-auto flex max-w-[180px] flex-grow items-center rounded-full border border-[#028090] bg-brand-canvas/80 px-3 py-1.5 transition-all focus-within:ring-1 focus-within:ring-[#028090]"
           >
             <input
               type="text"
@@ -160,8 +160,26 @@ export default function HomePage() {
               className="w-full flex-grow bg-transparent text-xs text-brand-text outline-none placeholder:text-brand-muted"
               placeholder="検索..."
             />
-            <button type="submit" className="ml-1 text-xs text-brand-muted">
-              🔍
+
+            {/* 虫眼鏡アイコン */}
+            <button
+              type="submit"
+              className="ml-1 flex items-center justify-center text-[#028090]"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2.5}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
             </button>
           </form>
         </header>
@@ -238,7 +256,7 @@ export default function HomePage() {
 
               {displayData.map((topic: any) => (
                 <div key={topic.topic_id}>
-                  {/* 修正点：recommend_score順に並べ替え */}
+                  {/* recommend_score順に並べ替え */}
                   <div className="grid grid-cols-2 gap-4 px-1">
                     {[...topic.summaries]
                       .sort(
@@ -267,16 +285,21 @@ export default function HomePage() {
                               )}
                             </div>
 
-                            <div className="relative h-[170px] overflow-hidden rounded-2xl border border-brand-border/70 bg-brand-accent-softer/40">
+                            {/* 国旗を背景として配置 */}
+                            <div className="relative aspect-[3/2] w-full overflow-hidden border border-brand-border/70 bg-brand-accent-softer/40">
                               {flagImages[summary.country_name] && (
-                                <Image
-                                  src={flagImages[summary.country_name]}
-                                  alt={summary.country_name}
-                                  fill
-                                  className="object-cover mix-blend-multiply opacity-20"
-                                />
+                                <div className="absolute inset-0 z-0">
+                                  <Image
+                                    src={flagImages[summary.country_name]}
+                                    alt={summary.country_name}
+                                    fill
+                                    className="object-cover mix-blend-multiply opacity-15"
+                                  />
+                                </div>
                               )}
-                              <div className="relative z-10 p-3 h-full flex flex-col justify-between">
+
+                              {/* テキストコンテンツを前面に配置 */}
+                              <div className="relative z-10 p-4 h-full flex flex-col justify-between">
                                 <p className="text-sm font-bold leading-snug text-brand-text">
                                   {isNoData
                                     ? 'このトピックに関する報道は確認されませんでした。'
@@ -302,7 +325,7 @@ export default function HomePage() {
                   <div className="mt-8">
                     <Link
                       href={`/comparison/${topic.topic_id}`}
-                      className="block w-full rounded-3xl bg-brand-accent-secondary py-4 text-center font-bold text-white shadow-md transition-opacity hover:opacity-95"
+                      className="block w-full rounded-3xl bg-[#E8603C] py-4 text-center font-bold text-white shadow-md transition-opacity hover:opacity-95"
                     >
                       5カ国比較レポートを見る
                     </Link>

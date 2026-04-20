@@ -157,7 +157,7 @@ export default function NotebookPage() {
 
   return (
     <RequireAuth>
-      <div className="relative min-h-screen bg-[#FAF0E6] p-5 pb-32 text-[#1E2761]">
+      <div className="relative min-h-screen bg-brand-canvas p-5 pb-32">
         <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col">
           {/* --- ヘッダー部分 --- */}
           <div className="relative mb-10 flex items-center justify-between pb-3 border-b-2 border-[#1E2761]">
@@ -165,26 +165,36 @@ export default function NotebookPage() {
               ネタ帳リスト
             </h1>
 
-            {/*  編集ボタン */}
+            {/* 編集・削除ボタン */}
             <button
               onClick={() => {
                 if (isEditMode) {
-                  handleDeleteSelected();
+                  if (selectedIds.size > 0) {
+                    handleDeleteSelected();
+                  } else {
+                    setIsEditMode(false);
+                  }
                 } else {
                   setIsEditMode(true);
                 }
               }}
-              className={`px-5 py-2 rounded-full text-sm font-bold transition-all shadow-md outline-none focus:ring-0 ${
-                isEditMode
-                  ? 'bg-[#E8603C] text-white hover:bg-[#E8603C]/90'
-                  : 'bg-[#028090] text-white hover:bg-[#028090]/90'
-              }`}
+              className="flex items-center justify-center rounded-full border border-brand-border/70 bg-brand-accent-softer/40 px-4 py-1.5 transition-all active:opacity-70"
             >
-              {isEditMode
-                ? selectedIds.size > 0
-                  ? `${selectedIds.size}件を削除`
-                  : 'キャンセル'
-                : '編集'}
+              <span
+                className={`text-[11px] font-bold ${
+                  !isEditMode
+                    ? 'text-[#1E2761]'
+                    : selectedIds.size > 0
+                      ? 'text-red-600'
+                      : 'text-[#E8603C]'
+                }`}
+              >
+                {isEditMode
+                  ? selectedIds.size > 0
+                    ? `${selectedIds.size}件を削除`
+                    : 'キャンセル'
+                  : '編集'}
+              </span>
             </button>
           </div>
 
@@ -307,7 +317,9 @@ export default function NotebookPage() {
                   d="M5 13l4 4L19 7"
                 />
               </svg>
-              {toast.message}
+              <span className="text-xs font-bold whitespace-nowrap overflow-hidden text-ellipsis">
+                {toast.message}
+              </span>
             </div>
           </div>
         )}

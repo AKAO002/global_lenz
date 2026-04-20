@@ -12,7 +12,7 @@ export default function BottomNav({
   onOpenAbout,
 }: BottomNavProps) {
   return (
-    <footer className="fixed bottom-0 z-50 w-full rounded-t-3xl border border-b-0 border-brand-border/80 bg-brand-surface/95 shadow-lg backdrop-blur-sm">
+    <footer className="fixed bottom-0 z-50 w-full border border-b-0 border-brand-border/80 bg-brand-surface/95 shadow-lg backdrop-blur-sm">
       <nav className="mx-auto flex max-w-3xl items-center justify-around px-3 py-2">
         {/* ホーム */}
         <Link

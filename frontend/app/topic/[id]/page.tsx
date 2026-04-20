@@ -166,8 +166,8 @@ export default function TopicPage({
             onClick={handleSaveToNotebook}
             className={`flex items-center justify-center w-10 h-10 rounded-full transition-colors ${
               isSaved
-                ? 'text-amber-700 bg-amber-50' // 保存済み：真鍮色（シック）
-                : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100' // 未保存
+                ? 'bg-[#E8603C]/10 text-[#E8603C]' // 保存済み
+                : 'text-gray-400 hover:bg-[#E8603C]/5 hover:text-[#E8603C]' // 未保存
             }`}
             title={isSaved ? '保存済み' : 'ネタ帳に追加'}
             disabled={isSaved} // ボタン自体を無効化
@@ -236,11 +236,12 @@ export default function TopicPage({
           </div>
         </div>
 
-        {/* ログアウトボタン*/}
-        <div className="mt-16 text-center">
+        {/* ログアウトボタン */}
+        <div className="mx-auto mt-12 w-full flex justify-center">
           <button
+            type="button"
             onClick={handleLogout}
-            className="bg-[#AEE9A1] px-4 py-1 rounded text-xs text-gray-700 font-bold hover:bg-[#97D48D] transition-colors"
+            className="text-xs font-bold text-[#1E2761]/40 hover:text-[#E8603C] transition-colors"
           >
             ログアウト
           </button>
@@ -248,11 +249,11 @@ export default function TopicPage({
 
         {/* トースト表示 */}
         {toast.visible && (
-          <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-bottom-4 duration-300">
-            <div className="bg-gray-800/90 backdrop-blur-md text-white px-6 py-3 rounded-full shadow-lg text-sm font-medium flex items-center gap-2">
+          <div className="fixed bottom-28 left-1/2 -translate-x-1/2 z-[110] animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <div className="bg-[#E8603C] text-white px-7 py-3.5 rounded-full shadow-2xl text-sm font-bold flex items-center gap-2">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4 text-amber-400"
+                className="h-5 w-5 text-white"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -260,11 +261,13 @@ export default function TopicPage({
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  strokeWidth={2}
+                  strokeWidth={3}
                   d="M5 13l4 4L19 7"
                 />
               </svg>
-              {toast.message}
+              <span className="text-xs font-bold whitespace-nowrap overflow-hidden text-ellipsis">
+                {toast.message}
+              </span>
             </div>
           </div>
         )}
