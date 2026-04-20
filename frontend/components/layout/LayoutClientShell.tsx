@@ -9,19 +9,24 @@ type LayoutClientShellProps = {
   children: React.ReactNode;
 };
 
-export default function LayoutClientShell({ children }: LayoutClientShellProps) {
+export default function LayoutClientShell({
+  children,
+}: LayoutClientShellProps) {
   const [isLinksOpen, setIsLinksOpen] = useState(false);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
 
   return (
     <>
-      <main className="flex-1 p-6 pb-20">{children}</main>
+      <main className="flex-1 pb-16">{children}</main>
       <BottomNav
         onOpenLinks={() => setIsLinksOpen(true)}
         onOpenAbout={() => setIsAboutOpen(true)}
       />
       <AboutModal open={isAboutOpen} onClose={() => setIsAboutOpen(false)} />
-      <UsefulLinksModal open={isLinksOpen} onClose={() => setIsLinksOpen(false)} />
+      <UsefulLinksModal
+        open={isLinksOpen}
+        onClose={() => setIsLinksOpen(false)}
+      />
     </>
   );
 }
