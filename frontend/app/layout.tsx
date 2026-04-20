@@ -13,8 +13,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ja">
-      <body className="flex flex-col min-h-screen">
+    <html lang="ja" className="bg-brand-canvas">
+      <body className="flex min-h-screen flex-col bg-brand-canvas text-brand-text antialiased">
         <AuthProvider>
           <LayoutClientShell>{children}</LayoutClientShell>
         </AuthProvider>

@@ -13,9 +13,9 @@ export type BadgeProps = Omit<HTMLAttributes<HTMLSpanElement>, "children"> & {
  */
 const variantClass: Record<"positive" | "negative", string> = {
   positive:
-    "border border-blue-100/90 bg-blue-50 text-brand-accent-deep",
+    "border border-brand-accent-secondary/25 bg-brand-accent-softer text-brand-accent-secondary-deep",
   negative:
-    "border border-gray-200/80 bg-gray-100 text-gray-600",
+    "border border-brand-border bg-brand-accent-softer/60 text-brand-muted",
 };
 
 function defaultContent(
