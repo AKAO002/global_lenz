@@ -7,7 +7,8 @@ export type FavoriteCardProps = {
   /** 選択中の見た目（青枠） */
   selected?: boolean;
   /** 指定時、カードタップでトグル（複数選択用） */
-  onToggleSelect?: () => void;
+  onToggleSelect?: (e: React.MouseEvent) => void;
+  href?: string; //遷移先URL
 };
 
 export default function FavoriteCard({
@@ -17,11 +18,14 @@ export default function FavoriteCard({
   mediaLine,
   selected = false,
   onToggleSelect,
+  href,
 }: FavoriteCardProps) {
   const card = (
     <article
       className={`h-full rounded-2xl backdrop-blur-[2px] transition-all duration-200 ${
-        onToggleSelect ? 'cursor-pointer hover:border-brand-accent/30 hover:bg-white' : ''
+        onToggleSelect
+          ? 'cursor-pointer hover:border-brand-accent/30 hover:bg-white'
+          : ''
       } ${
         selected
           ? 'border-2 border-blue-500 bg-white shadow-md ring-2 ring-blue-200/70 ring-offset-2 ring-offset-brand-canvas'
@@ -35,9 +39,13 @@ export default function FavoriteCard({
         >
           {publishedAt}
         </time>
-        <h2 className="text-base font-semibold leading-snug text-brand-text">{title}</h2>
+        <h2 className="text-base font-semibold leading-snug text-brand-text">
+          {title}
+        </h2>
         {mediaLine ? (
-          <p className="text-xs font-normal leading-relaxed text-brand-muted">{mediaLine}</p>
+          <p className="text-xs font-normal leading-relaxed text-brand-muted">
+            {mediaLine}
+          </p>
         ) : null}
       </div>
     </article>
@@ -45,17 +53,18 @@ export default function FavoriteCard({
 
   if (onToggleSelect) {
     return (
-      <button
-        type="button"
-        data-item-id={id}
-        onClick={onToggleSelect}
-        aria-pressed={selected}
-        className="w-full rounded-2xl text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
-      >
-        {card}
-      </button>
+      <div className="relative w-full">
+        <button
+          type="button"
+          onClick={onToggleSelect}
+          className="w-full text-left"
+        >
+          {card}
+        </button>
+        {/* もし選択中じゃない時に記事に飛ばしたいなら、ここに別途リンクボタンを置くか、
+            NotebookPage側で Link で囲みます */}
+      </div>
     );
   }
-
   return card;
 }
