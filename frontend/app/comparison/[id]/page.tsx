@@ -1,9 +1,14 @@
 // 5カ国比較要約（非認証）
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useId, useMemo, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { normalizeDifficultWords } from '@/lib/normalizeDifficultWords';
+import {
+  DifficultWordsGlossaryModal,
+  DifficultWordsListSection,
+} from '@/components/glossary/DifficultWordsGlossary';
 
 export default function ComparePage() {
   const params = useParams();
@@ -19,6 +24,21 @@ export default function ComparePage() {
     message: '',
     visible: false,
   });
+  const [glossaryOpen, setGlossaryOpen] = useState(false);
+  const [glossaryFocusedTerm, setGlossaryFocusedTerm] = useState<string | null>(
+    null
+  );
+  const glossaryTitleId = useId();
+
+  const terms = useMemo(
+    () => normalizeDifficultWords(comparison?.difficult_word),
+    [comparison?.difficult_word]
+  );
+
+  const closeGlossary = useCallback(() => {
+    setGlossaryOpen(false);
+    setGlossaryFocusedTerm(null);
+  }, []);
 
   const fetchComparisonData = async () => {
     try {
@@ -138,17 +158,20 @@ export default function ComparePage() {
   };
 
   if (loading) {
-    return <div className="p-10 text-center">読み込み中...</div>;
+    return (
+      <div className="min-h-screen bg-brand-canvas p-10 text-center text-brand-muted">
+        読み込み中...
+      </div>
+    );
   }
 
   return (
-    <div className="bg-[#FDFBF6] min-h-screen pb-10">
-      <div className="max-w-md mx-auto bg-white min-h-screen shadow-lg p-6">
+    <div className="min-h-screen bg-brand-canvas pb-10">
+      <div className="mx-auto min-h-screen w-full max-w-md rounded-b-3xl border border-brand-border/50 bg-brand-canvas p-6 shadow-soft sm:rounded-b-[2rem]">
         {/* ヘッダーエリア*/}
-        <header className="flex items-center justify-between mb-8 pb-3 border-b border-gray-200">
+        <header className="mb-8 flex items-center justify-between border-b border-brand-border pb-3">
           <div className="flex items-baseline gap-2">
-            {/* 日付*/}
-            <h1 className="text-xl font-bold">
+            <h1 className="text-xl font-bold text-brand-text">
               {new Date()
                 .toLocaleDateString('ja-JP', {
                   month: 'numeric',
@@ -164,8 +187,8 @@ export default function ComparePage() {
             onClick={handleSaveToNotebook}
             className={`flex items-center justify-center w-10 h-10 rounded-full transition-colors ${
               isSaved
-                ? 'text-amber-700 bg-amber-50' // 保存済み
-                : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100' // 未保存
+                ? 'bg-brand-accent-soft text-brand-accent-deep' // 保存済み
+                : 'text-brand-muted hover:bg-brand-accent-softer hover:text-brand-text' // 未保存
             }`}
             title={isSaved ? '保存済み' : 'ネタ帳に追加'}
           >
@@ -188,19 +211,28 @@ export default function ComparePage() {
         </header>
 
         <div className="space-y-6">
-          <p className="text-center font-bold mb-6">5カ国比較要約</p>
+          <p className="mb-6 text-center font-bold text-brand-text">5カ国比較要約</p>
 
           {comparison ? (
             <div className="space-y-6">
               {/* 比較要約 */}
-              <div className="border-l-4 border-orange-300 pl-4 py-2">
-                <h2 className="font-bold text-gray-800 mb-2">
+              <div className="border-l-4 border-brand-accent-secondary py-2 pl-4">
+                <h2 className="mb-2 font-bold text-brand-text">
                   {comparison.topic_name}
                 </h2>
 
-                <p className="text-sm text-gray-700 leading-relaxed">
+                <p className="text-sm leading-relaxed text-brand-text">
                   {comparison.comparison_summary}
                 </p>
+
+                <DifficultWordsListSection
+                  terms={terms}
+                  sectionClassName="mt-6"
+                  onSelectTerm={(term) => {
+                    setGlossaryFocusedTerm(term);
+                    setGlossaryOpen(true);
+                  }}
+                />
               </div>
 
               <div className="space-y-4">
@@ -209,11 +241,11 @@ export default function ComparePage() {
                   .map((country: any, index: number) => (
                     <div
                       key={index}
-                      className="border rounded-lg p-4 bg-gray-50"
+                      className="rounded-3xl border border-brand-border/70 bg-brand-accent-softer/30 p-4"
                     >
                       {/* URL表示 */}
-                      <div className="text-xs text-gray-500">
-                        <span className="font-semibold">引用元:</span>
+                      <div className="text-xs text-brand-muted">
+                        <span className="font-semibold text-brand-text">引用元:</span>
 
                         <span className="ml-1">{country.media_name}</span>
 
@@ -222,7 +254,7 @@ export default function ComparePage() {
                             href={country.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-blue-500 underline break-all"
+                            className="break-all text-brand-accent-secondary underline"
                           >
                             {country.url}
                           </a>
@@ -233,24 +265,33 @@ export default function ComparePage() {
               </div>
             </div>
           ) : (
-            <div className="text-center py-20 text-gray-500">
+            <div className="py-20 text-center text-brand-muted">
               比較データが見つかりませんでした。
             </div>
           )}
         </div>
       </div>
 
+      <DifficultWordsGlossaryModal
+        open={glossaryOpen}
+        onClose={closeGlossary}
+        titleId={glossaryTitleId}
+        terms={terms}
+        focusedTerm={glossaryFocusedTerm}
+        emptyMessage="この比較に紐づく用語解説データ（difficult_word）はまだありません。"
+      />
+
       {/* ログイン案内モーダル */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-          <div className="bg-[#FDFBF6] w-full max-w-sm rounded-3xl p-8 shadow-2xl border border-orange-100 animate-in fade-in zoom-in duration-300">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-brand-text/25 p-4 backdrop-blur-sm">
+          <div className="card-on-canvas w-full max-w-sm animate-in rounded-3xl border border-brand-border/80 p-8 shadow-2xl fade-in zoom-in duration-300">
             <div className="text-center space-y-4">
               {/* アイコン */}
               <div className="flex justify-center">
-                <div className="bg-amber-50 p-4 rounded-full">
+                <div className="rounded-full bg-brand-accent-soft p-4">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className="w-10 h-10 text-amber-700"
+                    className="h-10 w-10 text-brand-accent"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -265,10 +306,10 @@ export default function ComparePage() {
                 </div>
               </div>
 
-              <h3 className="text-lg font-bold text-gray-800">
+              <h3 className="text-lg font-bold text-brand-text">
                 ネタ帳を使ってみませんか？
               </h3>
-              <p className="text-sm text-gray-600 leading-relaxed">
+              <p className="text-sm leading-relaxed text-brand-muted">
                 ログインすると、気になったニュースを自分だけの「ネタ帳」に保存して、いつでも読み返せるようになります。
               </p>
 
@@ -277,13 +318,13 @@ export default function ComparePage() {
                   onClick={() =>
                     router.push(`/login?redirect=${window.location.pathname}`)
                   }
-                  className="w-full bg-amber-700 text-white py-3 rounded-full font-bold shadow-md hover:bg-amber-800 transition-colors"
+                  className="w-full rounded-full bg-brand-accent py-3 font-bold text-white shadow-md transition-opacity hover:opacity-95"
                 >
                   ログインして保存する
                 </button>
                 <button
                   onClick={() => setIsModalOpen(false)}
-                  className="w-full text-gray-400 text-sm font-medium hover:text-gray-600 transition-colors"
+                  className="w-full text-sm font-medium text-brand-muted transition-colors hover:text-brand-text"
                 >
                   今はしない
                 </button>
@@ -296,11 +337,11 @@ export default function ComparePage() {
       {/* トースト通知 */}
       {toast.visible && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-bottom-4 duration-300">
-          <div className="bg-gray-800/90 backdrop-blur-md text-white px-6 py-3 rounded-full shadow-lg text-sm font-medium flex items-center gap-2">
+          <div className="flex items-center gap-2 rounded-full border border-brand-border bg-brand-surface px-6 py-3 text-sm font-medium text-brand-text shadow-lg backdrop-blur-md">
             {/* チェックアイコン */}
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-4 w-4 text-amber-400"
+              className="h-4 w-4 text-brand-accent"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"

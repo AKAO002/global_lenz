@@ -141,29 +141,29 @@ export default function HomePage() {
   // --------------------
 
   return (
-    <div className="bg-[#FDFBF6] min-h-screen">
-      <div className="max-w-md mx-auto min-h-screen bg-white shadow-lg relative">
+    <div className="min-h-screen bg-brand-canvas">
+      <div className="relative mx-auto min-h-screen w-full max-w-md rounded-b-3xl border border-brand-border/50 bg-brand-canvas text-brand-text shadow-soft sm:rounded-b-[2rem]">
         {/* 日付 + 検索窓 を横並びに修正 */}
         {/* ヘッダー全体：px-6 に広げて日付を少し内側へ */}
         <header className="p-4 px-6 flex items-center justify-between gap-4">
           {/* 日付：text-lg に少しサイズダウンして馴染ませる */}
-          <h1 className="text-lg font-bold text-gray-800 whitespace-nowrap tracking-tight">
+          <h1 className="whitespace-nowrap text-lg font-bold tracking-tight text-brand-text">
             {today}
           </h1>
 
           {/* 検索フォーム：max-w-[200px] で大きさを制限し、ml-auto で右側に寄せる */}
           <form
             onSubmit={handleSearch}
-            className="flex-grow max-w-[180px] ml-auto flex bg-gray-100 rounded-full px-3 py-1.5 items-center border border-transparent focus-within:border-gray-200 transition-all"
+            className="ml-auto flex max-w-[180px] flex-grow items-center rounded-full border border-brand-border/60 bg-brand-canvas/80 px-3 py-1.5 transition-all focus-within:border-brand-accent-secondary/40"
           >
             <input
               type="text"
               value={searchKeyword}
               onChange={(e) => setSearchKeyword(e.target.value)}
-              className="bg-transparent flex-grow outline-none text-xs text-gray-700 w-full"
+              className="w-full flex-grow bg-transparent text-xs text-brand-text outline-none placeholder:text-brand-muted"
               placeholder="検索..."
             />
-            <button type="submit" className="text-gray-400 ml-1 text-xs">
+            <button type="submit" className="ml-1 text-xs text-brand-muted">
               🔍
             </button>
           </form>
@@ -176,10 +176,10 @@ export default function HomePage() {
               <button
                 key={tab.topic_id}
                 onClick={() => setActiveTab(tab.topic_id)}
-                className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${
+                className={`rounded-full px-4 py-2 text-xs font-bold transition-all ${
                   activeTab === tab.topic_id
-                    ? 'bg-black text-white'
-                    : 'bg-gray-100 text-gray-500 border border-gray-200'
+                    ? 'border-2 border-brand-text bg-brand-canvas text-brand-text shadow-sm'
+                    : 'border border-brand-border bg-brand-canvas/90 text-brand-muted'
                 }`}
               >
                 {tab.topic_name}
@@ -192,30 +192,30 @@ export default function HomePage() {
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20 px-6">
               {/* 1. アニメーションアイコン（知的な回転体） */}
-              <div className="relative w-16 h-16 mb-6">
-                <div className="absolute inset-0 border-4 border-orange-100 rounded-full"></div>
-                <div className="absolute inset-0 border-4 border-t-orange-400 rounded-full animate-spin"></div>
-                <div className="absolute inset-2 border-4 border-b-blue-300 rounded-full animate-[spin_1.5s_linear_infinite_reverse]"></div>
+              <div className="relative mb-6 h-16 w-16">
+                <div className="absolute inset-0 rounded-full border-4 border-brand-accent-soft"></div>
+                <div className="absolute inset-0 animate-spin rounded-full border-4 border-t-brand-accent"></div>
+                <div className="absolute inset-2 animate-[spin_1.5s_linear_infinite_reverse] rounded-full border-4 border-b-brand-accent-secondary"></div>
               </div>
 
               {/* 2. テキスト演出 */}
-              <div className="text-center space-y-2">
-                <h2 className="text-xl font-bold text-gray-800 animate-pulse">
+              <div className="space-y-2 text-center">
+                <h2 className="animate-pulse text-xl font-bold text-brand-text">
                   AIが世界中を分析中...
                 </h2>
                 <div className="flex flex-col items-center">
-                  <p className="text-sm text-gray-500 font-medium">
+                  <p className="text-sm font-medium text-brand-muted">
                     「{searchKeyword}」に関する視点を抽出しています
                   </p>
-                  <p className="text-[10px] text-gray-400 mt-4 tracking-widest uppercase">
+                  <p className="mt-4 text-[10px] uppercase tracking-widest text-brand-muted">
                     Fetching from Global Media
                   </p>
                 </div>
               </div>
 
               {/* 3. プログレスバー（視覚的な進捗感） */}
-              <div className="mt-8 w-full max-w-[200px] h-1 bg-gray-100 rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-orange-300 to-orange-500 animate-[loading-bar_3s_infinite]"></div>
+              <div className="mt-8 h-1 w-full max-w-[200px] overflow-hidden rounded-full bg-brand-border-muted">
+                <div className="h-full animate-[loading-bar_3s_infinite] bg-gradient-to-r from-brand-accent-secondary to-brand-accent"></div>
               </div>
 
               {/* Tailwind CSSのカスタムアニメーションをインラインで追加 */}
@@ -233,8 +233,8 @@ export default function HomePage() {
             </div>
           ) : (
             <>
-              <div className="text-center mb-6">
-                <p className="text-sm font-bold text-gray-700">
+              <div className="mb-6 text-center">
+                <p className="text-sm font-bold text-brand-text">
                   {query ? `「${query}」の分析結果` : '各国要約'}
                 </p>
               </div>
@@ -259,8 +259,8 @@ export default function HomePage() {
                             key={`${topic.topic_id}-${summary.id}`}
                             className={`flex flex-col transition-opacity ${isNoData ? 'opacity-40 grayscale' : 'opacity-100'}`}
                           >
-                            <div className="flex items-center gap-1 mb-1.5 ml-0.5">
-                              <span className="text-[11px] font-bold">
+                            <div className="mb-1.5 ml-0.5 flex items-center gap-1">
+                              <span className="text-[11px] font-bold text-brand-text">
                                 {summary.country_name}：
                               </span>
                               {!isNoData && (
@@ -270,7 +270,7 @@ export default function HomePage() {
                               )}
                             </div>
 
-                            <div className="relative rounded-sm overflow-hidden border border-gray-100 h-[170px] bg-gray-50">
+                            <div className="relative h-[170px] overflow-hidden rounded-2xl border border-brand-border/70 bg-brand-accent-softer/40">
                               {flagImages[summary.country_name] && (
                                 <Image
                                   src={flagImages[summary.country_name]}
@@ -280,7 +280,7 @@ export default function HomePage() {
                                 />
                               )}
                               <div className="relative z-10 p-3 h-full flex flex-col justify-between">
-                                <p className="text-sm font-bold leading-snug">
+                                <p className="text-sm font-bold leading-snug text-brand-text">
                                   {isNoData
                                     ? 'このトピックに関する報道は確認されませんでした。'
                                     : summary.summary.length > 35
@@ -290,7 +290,7 @@ export default function HomePage() {
                                 {!isNoData && (
                                   <Link
                                     href={`/topic/${summary.id}`}
-                                    className="text-[10px] underline self-end font-bold"
+                                    className="self-end text-[10px] font-bold text-brand-accent underline"
                                   >
                                     ...もっと見る
                                   </Link>
@@ -306,7 +306,7 @@ export default function HomePage() {
                     <Link href={`/comparison/${topic.comparison_id}`}>
                       <button
                         disabled={!topic.is_comparison_favoritable}
-                        className={`w-full font-bold py-4 rounded-xl shadow-md text-white ${
+                        className={`block w-full rounded-3xl bg-brand-accent-secondary py-4 text-center font-bold text-white shadow-md transition-opacity hover:opacity-95 ${
                           topic.is_comparison_favoritable
                             ? 'bg-orange-400'
                             : 'bg-gray-300 cursor-not-allowed'

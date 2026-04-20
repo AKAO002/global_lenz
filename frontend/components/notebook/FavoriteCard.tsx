@@ -24,12 +24,12 @@ export default function FavoriteCard({
     <article
       className={`h-full rounded-2xl backdrop-blur-[2px] transition-all duration-200 ${
         onToggleSelect
-          ? 'cursor-pointer hover:border-brand-accent/30 hover:bg-white'
+          ? 'cursor-pointer hover:border-brand-accent/30 hover:bg-brand-surface'
           : ''
       } ${
         selected
-          ? 'border-2 border-blue-500 bg-white shadow-md ring-2 ring-blue-200/70 ring-offset-2 ring-offset-brand-canvas'
-          : 'border border-brand-border/60 bg-white/85 shadow-sm'
+          ? 'border-2 border-brand-accent-secondary bg-brand-surface shadow-md ring-2 ring-brand-accent-secondary/30 ring-offset-2 ring-offset-brand-canvas'
+          : 'border border-brand-border/60 bg-brand-surface/90 shadow-sm'
       } px-4 py-3.5 sm:px-5 sm:py-4`}
     >
       <div className="flex flex-col gap-1.5">

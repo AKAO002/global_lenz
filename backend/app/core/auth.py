@@ -7,6 +7,7 @@ SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY")
 JWKS_URL = f"{SUPABASE_URL}/auth/v1/.well-known/jwks.json"
 ALGORITHMS = ["ES256"]
+
 security = HTTPBearer(auto_error=False)
 
 # JWKS取得（キャッシュなし簡易版）
@@ -19,6 +20,7 @@ async def get_jwks():
             }
         )
         return res.json()
+
 # JWT検証
 async def verify_jwt(token: str):
     jwks = await get_jwks()
@@ -43,6 +45,7 @@ async def verify_jwt(token: str):
             audience="authenticated",
             issuer=f"{SUPABASE_URL}/auth/v1",
         )
+
         return payload
 
     except Exception as e:
