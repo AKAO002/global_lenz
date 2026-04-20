@@ -8,6 +8,9 @@ export async function deleteFavorite({
   type: 'country' | 'comparison';
 }) {
   const params = new URLSearchParams();
+  if (!id) {
+    throw new Error('idが不正です');
+  }
 
   if (type === 'comparison') {
     params.append('comparison_summary_id', String(id));

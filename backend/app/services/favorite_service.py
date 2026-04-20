@@ -85,20 +85,13 @@ def create_favorite(data: dict):
 # ネタ帳削除
 def delete_favorite(favorite_id: int,user_id: str):
 
-    print("DELETE FAVORITE START")
-    print("user_id:", user_id)
-    print("favorite_id:", favorite_id)
-
     response = supabase.table(
         "favorites"
     ).delete().eq(
         "id", favorite_id
     ).eq("user_id", user_id
     ).execute()
-
-    print("delete response:", response)
-    print("deleted rows:", response.data)
-
+    
     return response.data
 
 # フロント表示用ネタ帳リスト（JOIN）
