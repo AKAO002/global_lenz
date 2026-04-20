@@ -17,7 +17,7 @@ export default function LayoutClientShell({
 
   return (
     <>
-      <main className="flex-1 pb-16">{children}</main>
+      <main className="min-h-screen flex-1 bg-brand-canvas pb-16">{children}</main>
       <BottomNav
         onOpenLinks={() => setIsLinksOpen(true)}
         onOpenAbout={() => setIsAboutOpen(true)}

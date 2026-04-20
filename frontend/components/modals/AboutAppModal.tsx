@@ -22,11 +22,11 @@ export default function AboutAppModal({ open, onClose }: AboutAppModalProps) {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:items-center">
       <button
         type="button"
         aria-label="モーダルを閉じる"
-        className="absolute inset-0 bg-black/25"
+        className="absolute inset-0 bg-brand-text/25 backdrop-blur-sm"
         onClick={onClose}
       />
 
@@ -34,7 +34,7 @@ export default function AboutAppModal({ open, onClose }: AboutAppModalProps) {
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="relative z-10 w-full max-w-md rounded-2xl border border-brand-border bg-brand-surface shadow-soft"
+        className="relative z-10 w-full max-w-md rounded-3xl border border-brand-border bg-brand-surface shadow-soft"
       >
         <div className="flex items-center justify-between border-b border-brand-border px-4 py-3">
           <h2 id={titleId} className="text-base font-semibold text-brand-text">
@@ -44,7 +44,7 @@ export default function AboutAppModal({ open, onClose }: AboutAppModalProps) {
             type="button"
             onClick={onClose}
             aria-label="閉じる"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full text-lg text-brand-text transition-colors hover:bg-brand-canvas"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full text-lg text-brand-text transition-colors hover:bg-brand-accent-soft"
           >
             ×
           </button>
