@@ -71,7 +71,7 @@ export default function TopicPage({
     router.push('/');
   };
 
-  // ネタ帳への保存・削除処理
+  // ネタ帳への保存処理
   const handleSaveToNotebook = async () => {
     try {
       // ログインユーザーを取得
@@ -84,58 +84,40 @@ export default function TopicPage({
         return;
       }
 
+      // 保存済みなら何もしない
+      if (isSaved) return;
       const token = session.access_token;
 
-      if (isSaved) {
-        // 削除処理
-        const response = await fetch(
-          `http://localhost:8000/api/favorites/${id}`,
-          {
-            method: 'DELETE',
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        if (!response.ok) throw new Error('削除に失敗しました');
+      // 保存処理
+      const isComparisonPage = window.location.pathname.includes('comparison');
+      const response = await fetch('http://localhost:8000/api/favorites/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`, // バックエンドの認証を通す
+        },
+        body: JSON.stringify({
+          [isComparisonPage ? 'comparison_summary_id' : 'country_summary_id']:
+            parseInt(id),
+        }),
+      });
 
-        setIsSaved(false);
-        showToast('ネタ帳から削除しました');
-      } else {
-        // 保存処理
-        const isComparisonPage =
-          window.location.pathname.includes('comparison');
-        const response = await fetch('http://localhost:8000/api/favorites/', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`, // バックエンドの認証を通す
-          },
-          body: JSON.stringify({
-            [isComparisonPage ? 'comparison_summary_id' : 'country_summary_id']:
-              parseInt(id),
-          }),
-        });
+      if (!response.ok) {
+        const err = await response.json();
 
-        if (!response.ok) {
-          const err = await response.json();
-          console.error('FastAPIエラー:', err);
-
-          // 二重保存防止のメッセージチェック
-          if (err.detail?.includes('already exists')) {
-            alert('このトピックは保存済みです');
-            setIsSaved(true);
-          } else {
-            alert('保存失敗: ' + err.detail);
-          }
-          return;
+        // 二重保存防止のメッセージチェック
+        if (err.detail?.includes('already exists')) {
+          setIsSaved(true);
+        } else {
+          alert('保存失敗: ' + err.detail);
         }
-        setIsSaved(true);
-        showToast('ネタ帳に追加しました！');
+        return;
       }
+      setIsSaved(true);
+      showToast('ネタ帳に追加しました！');
     } catch (error: any) {
       console.error('操作に失敗しました:', error);
-      alert('エラーが発生しました：' + error.message);
+      alert('エラーが発生しました：');
     }
   };
 
@@ -188,6 +170,7 @@ export default function TopicPage({
                 : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100' // 未保存
             }`}
             title={isSaved ? '保存済み' : 'ネタ帳に追加'}
+            disabled={isSaved} // ボタン自体を無効化
           >
             {/* ネタ帳アイコン */}
             <svg

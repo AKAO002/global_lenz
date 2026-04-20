@@ -59,59 +59,46 @@ export default function ComparePage() {
         return;
       }
 
+      // すでに保存済みなら何もしない
+      if (isSaved) return;
+
       const token = session.access_token;
+      // 保存処理
+      console.log('ネタ帳に追加中...');
+      const isComparisonPage = window.location.pathname.includes('comparison');
+      const realId = comparison?.comparison_id || comparison?.id;
 
-      // ログイン済み→保存処理
-      if (isSaved) {
-        // 削除処理
-        console.log('ネタ帳から削除中...');
-        const res = await fetch(`http://localhost:8000/api/favorites/${id}`, {
-          method: 'DELETE',
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok) throw new Error('削除に失敗しました');
-
-        setIsSaved(false); // 色をグレーに戻す
-        showToast('ネタ帳から削除しました');
-      } else {
-        // 保存処理
-        console.log('ネタ帳に追加中...');
-        const isComparisonPage =
-          window.location.pathname.includes('comparison');
-        const realId = comparison?.comparison_id || comparison?.id;
-
-        if (!realId) {
-          alert('データの読み込みが完了するまで保存できません');
-          return;
-        }
-
-        const response = await fetch(`http://localhost:8000/api/favorites/`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${session?.access_token}`,
-          },
-          body: JSON.stringify({
-            [isComparisonPage ? 'comparison_summary_id' : 'country_summary_id']:
-              realId,
-            topic_name: comparison.topic_name,
-            type: isComparisonPage ? 'comparison' : 'country',
-          }),
-        });
-
-        if (!response.ok) {
-          const err = await response.json();
-          if (err.detail?.includes('already exists')) {
-            setIsSaved(true);
-            return;
-          }
-          alert('保存失敗: ' + (err.detail || 'エラー'));
-          return;
-        }
-
-        setIsSaved(true); // 色を真鍮色（アンバー）にする
-        showToast('ネタ帳に追加しました！');
+      if (!realId) {
+        alert('データの読み込みが完了するまで保存できません');
+        return;
       }
+
+      const response = await fetch(`http://localhost:8000/api/favorites/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session?.access_token}`,
+        },
+        body: JSON.stringify({
+          [isComparisonPage ? 'comparison_summary_id' : 'country_summary_id']:
+            realId,
+          topic_name: comparison.topic_name,
+          type: isComparisonPage ? 'comparison' : 'country',
+        }),
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        if (err.detail?.includes('already exists')) {
+          setIsSaved(true);
+          return;
+        }
+        alert('保存失敗: ' + (err.detail || 'エラー'));
+        return;
+      }
+
+      setIsSaved(true); // 色を真鍮色（アンバー）にする
+      showToast('ネタ帳に追加しました！');
     } catch (error) {
       console.error('操作に失敗しました:', error);
     }
@@ -156,6 +143,7 @@ export default function ComparePage() {
                 : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100' // 未保存
             }`}
             title={isSaved ? '保存済み' : 'ネタ帳に追加'}
+            disabled={isSaved} // buttonタグ自体も無効化
           >
             {/* ネタ帳アイコン */}
             <svg
