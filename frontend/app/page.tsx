@@ -65,8 +65,6 @@ export default function HomePage() {
             })) || [],
         }));
 
-        console.log(formattedTodayData);
-
         // 通常時のデータとしてセット
         setSummaries(formattedTodayData);
 
@@ -305,7 +303,7 @@ export default function HomePage() {
                   </div>
 
                   <div className="mt-8">
-                    <Link href={`/comparison/${topic.topic_id}`}>
+                    <Link href={`/comparison/${topic.comparison_id}`}>
                       <button
                         disabled={!topic.is_comparison_favoritable}
                         className={`w-full font-bold py-4 rounded-xl shadow-md text-white ${
