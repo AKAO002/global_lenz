@@ -1,18 +1,26 @@
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/context/AuthContext';
 
 function LoginContent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
+  const { user, loading } = useAuth();
   const searchParams = useSearchParams();
   const router = useRouter();
   const redirect = searchParams.get('redirect') || '/';
+
+  useEffect(() => {
+    if (!loading && user) {
+      router.replace(redirect);
+    }
+  }, [user, loading, router, redirect]);
 
   const handleLogin = async () => {
     setErrorMessage(''); // エラーを初期化
@@ -50,8 +58,8 @@ function LoginContent() {
   };
 
   return (
-    <div className="mx-auto mt-6 max-w-md rounded-2xl border border-brand-border bg-brand-surface p-6 shadow-soft">
-      <h2 className="mb-6 text-2xl font-bold text-brand-text">ログイン</h2>
+    <div className="max-w-md mx-auto mt-10">
+      <h2 className="text-2xl font-bold mb-6">ログイン</h2>
 
       {/* エラーメッセージ表示 */}
       {errorMessage && (
@@ -61,20 +69,20 @@ function LoginContent() {
       )}
 
       <div className="mb-4">
-        <label className="mb-1 block text-sm text-brand-text">メールアドレス</label>
+        <label className="block mb-1">メールアドレス</label>
         <input
           type="email"
-          className="w-full rounded border border-brand-border bg-brand-accent-softer p-2 text-brand-text"
+          className="w-full border p-2 rounded"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
       </div>
 
       <div className="mb-4">
-        <label className="mb-1 block text-sm text-brand-text">パスワード</label>
+        <label className="block mb-1">パスワード</label>
         <input
           type="password"
-          className="w-full rounded border border-brand-border bg-brand-accent-softer p-2 text-brand-text"
+          className="w-full border p-2 rounded"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
@@ -82,14 +90,14 @@ function LoginContent() {
 
       <button
         onClick={handleLogin}
-        className="w-full rounded bg-brand-accent p-2 font-medium text-white transition-opacity hover:opacity-90"
+        className="bg-blue-600 text-white w-full p-2 rounded"
       >
         ログイン
       </button>
 
-      <p className="mt-4 text-sm text-brand-muted">
+      <p className="mt-4 text-sm">
         アカウントがない場合は
-        <Link href="/register" className="ml-1 text-brand-accent underline">
+        <Link href="/register" className="ml-1 text-blue-600">
           新規登録
         </Link>
       </p>
@@ -100,7 +108,7 @@ function LoginContent() {
 export default function LoginPage() {
   return (
     <Suspense
-      fallback={<div className="mx-auto mt-10 max-w-md text-brand-on-canvas">読み込み中...</div>}
+      fallback={<div className="mx-auto mt-10 max-w-md">読み込み中...</div>}
     >
       <LoginContent />
     </Suspense>

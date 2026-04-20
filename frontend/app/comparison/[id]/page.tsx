@@ -1,70 +1,24 @@
 // 5カ国比較要約（非認証）
 'use client';
 
-import React, { useState, useEffect, useId, useMemo } from 'react';
-import { useParams } from 'next/navigation';
-import HomeStylePageLoading from '@/components/ui/HomeStylePageLoading';
-
-type DifficultWordItem = { term: string; description: string };
-
-/** `origin/feature/UI` の `GlossaryModal.normalizeDifficultWords` と同じ */
-function normalizeDifficultWords(raw: unknown): DifficultWordItem[] {
-  if (raw == null) return [];
-
-  let parsed: unknown = raw;
-  if (typeof raw === 'string') {
-    try {
-      parsed = JSON.parse(raw) as unknown;
-    } catch {
-      return [];
-    }
-  }
-
-  if (!Array.isArray(parsed)) return [];
-
-  const out: DifficultWordItem[] = [];
-  for (const item of parsed) {
-    if (!item || typeof item !== 'object') continue;
-    const record = item as Record<string, unknown>;
-    const term = typeof record.term === 'string' ? record.term.trim() : '';
-    const description =
-      typeof record.description === 'string'
-        ? record.description
-        : typeof record.body === 'string'
-          ? record.body
-          : '';
-
-    if (term) {
-      out.push({ term, description });
-    }
-  }
-
-  return out;
-}
+import React, { useState, useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 
 export default function ComparePage() {
   const params = useParams();
+  const router = useRouter();
+  const { user, session } = useAuth();
   const id = params?.id as string;
+
   const [comparison, setComparison] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
-  const [glossaryOpen, setGlossaryOpen] = useState(false);
-  const [glossaryFocusedTerm, setGlossaryFocusedTerm] = useState<string | null>(null);
-  const glossaryTitleId = useId();
-
-  const terms = useMemo(
-    () => normalizeDifficultWords(comparison?.difficult_word),
-    [comparison?.difficult_word]
-  );
-
-  const closeGlossary = React.useCallback(() => {
-    setGlossaryOpen(false);
-    setGlossaryFocusedTerm(null);
-  }, []);
-
-  const focusedEntry = useMemo(() => {
-    if (!glossaryFocusedTerm) return null;
-    return terms.find((t) => t.term === glossaryFocusedTerm) ?? null;
-  }, [glossaryFocusedTerm, terms]);
+  const [isSaved, setIsSaved] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false); // モーダルの開閉
+  const [toast, setToast] = useState<{ message: string; visible: boolean }>({
+    message: '',
+    visible: false,
+  });
 
   useEffect(() => {
     if (!id) return;
@@ -76,10 +30,15 @@ export default function ComparePage() {
         const res = await fetch(
           `http://localhost:8000/api/comparison-summaries/${id}/detail`
         );
+
+        if (!res.ok) throw new Error('取得に失敗しました');
         const data = await res.json();
 
         if (res.ok) {
           setComparison(data);
+          if (data.is_already_saved) {
+            setIsSaved(true);
+          }
         }
       } catch (err) {
         console.error('比較データの取得に失敗しました:', err);
@@ -89,167 +48,262 @@ export default function ComparePage() {
     };
 
     fetchComparisonData();
-  }, [id]);
+  }, [id, user]);
 
-  useEffect(() => {
-    if (!glossaryOpen) return;
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') closeGlossary();
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [glossaryOpen, closeGlossary]);
+  // ネタ帳保存処理
+  const handleSaveToNotebook = async () => {
+    try {
+      // 未ログインならモーダル
+      if (!session) {
+        setIsModalOpen(true);
+        return;
+      }
+
+      const token = session.access_token;
+
+      // ログイン済み→保存処理
+      if (isSaved) {
+        // 削除処理
+        console.log('ネタ帳から削除中...');
+        const res = await fetch(`http://localhost:8000/api/favorites/${id}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error('削除に失敗しました');
+
+        setIsSaved(false); // 色をグレーに戻す
+        showToast('ネタ帳から削除しました');
+      } else {
+        // 保存処理
+        console.log('ネタ帳に追加中...');
+        const isComparisonPage =
+          window.location.pathname.includes('comparison');
+        const realId = comparison?.comparison_id || comparison?.id;
+
+        if (!realId) {
+          alert('データの読み込みが完了するまで保存できません');
+          return;
+        }
+
+        const response = await fetch(`http://localhost:8000/api/favorites/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session?.access_token}`,
+          },
+          body: JSON.stringify({
+            [isComparisonPage ? 'comparison_summary_id' : 'country_summary_id']:
+              realId,
+            topic_name: comparison.topic_name,
+            type: isComparisonPage ? 'comparison' : 'country',
+          }),
+        });
+
+        if (!response.ok) {
+          const err = await response.json();
+          if (err.detail?.includes('already exists')) {
+            setIsSaved(true);
+            return;
+          }
+          alert('保存失敗: ' + (err.detail || 'エラー'));
+          return;
+        }
+
+        setIsSaved(true); // 色を真鍮色（アンバー）にする
+        showToast('ネタ帳に追加しました！');
+      }
+    } catch (error) {
+      console.error('操作に失敗しました:', error);
+    }
+  };
+
+  // トースト表示関数
+  const showToast = (message: string) => {
+    setToast({ message, visible: true });
+    setTimeout(() => {
+      setToast({ message: '', visible: false });
+    }, 1500); // 1.5秒後に消える
+  };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-[#FDFBF6]">
-        <HomeStylePageLoading
-          className="min-h-[60vh]"
-          detailLine="5カ国比較の内容を読み込んでいます"
-        />
-      </div>
-    );
+    return <div className="p-10 text-center">読み込み中...</div>;
   }
 
   return (
     <div className="bg-[#FDFBF6] min-h-screen pb-10">
       <div className="max-w-md mx-auto bg-white min-h-screen shadow-lg p-6">
-        <header className="mb-8 text-center">
-          <h1 className="text-xl font-bold text-gray-800">5カ国比較要約</h1>
+        {/* ヘッダーエリア*/}
+        <header className="flex items-center justify-between mb-8 pb-3 border-b border-gray-200">
+          <div className="flex items-baseline gap-2">
+            {/* 日付*/}
+            <h1 className="text-xl font-bold">
+              {new Date()
+                .toLocaleDateString('ja-JP', {
+                  month: 'numeric',
+                  day: 'numeric',
+                  weekday: 'short',
+                })
+                .replace(/\//g, '月')}
+            </h1>
+          </div>
+
+          {/* ネタ帳保存ボタン（アイコン）*/}
+          <button
+            onClick={handleSaveToNotebook}
+            className={`flex items-center justify-center w-10 h-10 rounded-full transition-colors ${
+              isSaved
+                ? 'text-amber-700 bg-amber-50' // 保存済み
+                : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100' // 未保存
+            }`}
+            title={isSaved ? '保存済み' : 'ネタ帳に追加'}
+          >
+            {/* ネタ帳アイコン */}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-6 h-6"
+              fill={isSaved ? 'currentColor' : 'none'}
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+              />
+            </svg>
+          </button>
         </header>
 
-        {comparison ? (
-          <div className="space-y-6">
-            {/* 比較要約 */}
-            <div className="border-l-4 border-orange-300 pl-4 py-2">
-              <h2 className="mb-2 font-bold text-gray-800">{comparison.topic_name}</h2>
+        <div className="space-y-6">
+          <p className="text-center font-bold mb-6">5カ国比較要約</p>
 
-              <p className="text-sm text-gray-700 leading-relaxed">
-                {comparison.comparison_summary}
-              </p>
+          {comparison ? (
+            <div className="space-y-6">
+              {/* 比較要約 */}
+              <div className="border-l-4 border-orange-300 pl-4 py-2">
+                <h2 className="font-bold text-gray-800 mb-2">
+                  {comparison.topic_name}
+                </h2>
 
-              {terms.length > 0 ? (
-                <section className="mt-6 rounded-2xl border border-gray-200 bg-white p-4 shadow-md sm:p-5">
-                  <h3 className="mb-3 text-base font-bold text-gray-900">用語一覧</h3>
-                  <ul className="space-y-2">
-                    {terms.map((item) => (
-                      <li
-                        key={item.term}
-                        className="flex items-center justify-between gap-3 rounded-xl border border-emerald-100/90 bg-emerald-50/70 px-4 py-3.5"
-                      >
-                        <span className="text-sm font-semibold text-gray-900">{item.term}</span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setGlossaryFocusedTerm(item.term);
-                            setGlossaryOpen(true);
-                          }}
-                          aria-label={`「${item.term}」の用語解説を開く`}
-                          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-base font-bold leading-none text-gray-800 shadow-sm transition-colors hover:bg-gray-50"
-                        >
-                          ?
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              ) : null}
-            </div>
+                <p className="text-sm text-gray-700 leading-relaxed">
+                  {comparison.comparison_summary}
+                </p>
+              </div>
 
-            <div className="space-y-4">
-              {comparison.country_summaries
-                ?.filter((country: any) => country.url !== null)
-                .map((country: any, index: number) => (
-                  <div key={index} className="border rounded-lg p-4 bg-gray-50">
-                    <div className="mb-2 text-sm font-bold text-gray-800">{country.country_name}</div>
-                    {/* URL表示 */}
-                    <div className="text-xs text-gray-500">
-                      <span className="font-semibold">引用元:</span>
+              <div className="space-y-4">
+                {comparison.country_summaries
+                  ?.filter((country: any) => country.url !== null)
+                  .map((country: any, index: number) => (
+                    <div
+                      key={index}
+                      className="border rounded-lg p-4 bg-gray-50"
+                    >
+                      {/* URL表示 */}
+                      <div className="text-xs text-gray-500">
+                        <span className="font-semibold">引用元:</span>
 
-                      <span className="ml-1">{country.media_name}</span>
+                        <span className="ml-1">{country.media_name}</span>
 
-                      <div className="mt-1">
-                        <a
-                          href={country.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-500 underline break-all"
-                        >
-                          {country.url}
-                        </a>
+                        <div className="mt-1">
+                          <a
+                            href={country.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-500 underline break-all"
+                          >
+                            {country.url}
+                          </a>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+              </div>
             </div>
-          </div>
-        ) : (
-          <div className="text-center py-20 text-gray-500">
-            比較データが見つかりませんでした。
-          </div>
-        )}
+          ) : (
+            <div className="text-center py-20 text-gray-500">
+              比較データが見つかりませんでした。
+            </div>
+          )}
+        </div>
+      </div>
 
-        {glossaryOpen && (
-          <div className="fixed inset-0 z-[80] flex items-center justify-center px-4 py-4">
-            <button
-              type="button"
-              aria-label="背景をクリックして閉じる"
-              className="animate-backdrop-fade-in absolute inset-0 z-0 bg-brand-canvas/60 backdrop-blur-[8px]"
-              onClick={closeGlossary}
-            />
+      {/* ログイン案内モーダル */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="bg-[#FDFBF6] w-full max-w-sm rounded-3xl p-8 shadow-2xl border border-orange-100 animate-in fade-in zoom-in duration-300">
+            <div className="text-center space-y-4">
+              {/* アイコン */}
+              <div className="flex justify-center">
+                <div className="bg-amber-50 p-4 rounded-full">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="w-10 h-10 text-amber-700"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                    />
+                  </svg>
+                </div>
+              </div>
 
-            <div
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby={glossaryTitleId}
-              className="animate-glossary-modal-in relative z-10 flex max-h-[min(85vh,560px)] w-full max-w-lg flex-col rounded-[2rem] border border-brand-border bg-brand-surface shadow-soft"
-            >
-              <div className="flex shrink-0 items-center justify-between border-b border-brand-border px-6 py-4">
-                <h2 id={glossaryTitleId} className="text-base font-semibold text-brand-text">
-                  {focusedEntry ? `用語解説: ${focusedEntry.term}` : '用語解説'}
-                </h2>
+              <h3 className="text-lg font-bold text-gray-800">
+                ネタ帳を使ってみませんか？
+              </h3>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                ログインすると、気になったニュースを自分だけの「ネタ帳」に保存して、いつでも読み返せるようになります。
+              </p>
+
+              <div className="pt-4 space-y-3">
                 <button
-                  type="button"
-                  onClick={closeGlossary}
-                  aria-label="閉じる"
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-full text-lg text-brand-text transition-all duration-200 hover:bg-brand-accent-soft"
+                  onClick={() =>
+                    router.push(`/login?redirect=${window.location.pathname}`)
+                  }
+                  className="w-full bg-amber-700 text-white py-3 rounded-full font-bold shadow-md hover:bg-amber-800 transition-colors"
                 >
-                  ×
+                  ログインして保存する
+                </button>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="w-full text-gray-400 text-sm font-medium hover:text-gray-600 transition-colors"
+                >
+                  今はしない
                 </button>
               </div>
-
-              <div className="min-h-0 overflow-y-auto p-6 sm:p-8">
-                {terms.length === 0 ? (
-                  <p className="text-sm leading-relaxed text-brand-muted">
-                    この比較に紐づく用語解説データ（difficult_word）はまだありません。
-                  </p>
-                ) : focusedEntry ? (
-                  <div className="rounded-2xl border border-brand-border/90 bg-brand-accent-softer px-5 py-4">
-                    <p className="text-sm font-semibold text-brand-text">{focusedEntry.term}</p>
-                    <p className="mt-2 text-sm font-normal leading-relaxed text-brand-text">
-                      {focusedEntry.description || '解説文がありません。'}
-                    </p>
-                  </div>
-                ) : (
-                  <ul className="space-y-5">
-                    {terms.map((item) => (
-                      <li
-                        key={item.term}
-                        className="rounded-2xl border border-brand-border/90 bg-brand-accent-softer px-5 py-4"
-                      >
-                        <p className="text-sm font-semibold text-brand-text">{item.term}</p>
-                        <p className="mt-1.5 text-sm font-normal leading-relaxed text-brand-muted">
-                          {item.description || '—'}
-                        </p>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* トースト通知 */}
+      {toast.visible && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-bottom-4 duration-300">
+          <div className="bg-gray-800/90 backdrop-blur-md text-white px-6 py-3 rounded-full shadow-lg text-sm font-medium flex items-center gap-2">
+            {/* チェックアイコン */}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4 text-amber-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+            {toast.message}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

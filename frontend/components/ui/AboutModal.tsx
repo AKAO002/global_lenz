@@ -79,11 +79,11 @@ export default function AboutModal({ open, onClose }: AboutModalProps) {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:items-center">
       <button
         type="button"
         aria-label="背景をクリックして閉じる"
-        className="absolute inset-0 bg-black/25"
+        className="absolute inset-0 bg-brand-text/20"
         onClick={onClose}
       />
 
@@ -94,7 +94,10 @@ export default function AboutModal({ open, onClose }: AboutModalProps) {
         className="relative z-10 flex max-h-[min(90vh,720px)] w-full max-w-lg flex-col rounded-3xl border border-brand-border bg-brand-surface shadow-soft"
       >
         <div className="flex shrink-0 items-center justify-between border-b border-brand-border px-5 py-3.5 sm:px-6">
-          <h2 id={titleId} className="text-base font-semibold tracking-tight text-brand-text sm:text-[1.0625rem]">
+          <h2
+            id={titleId}
+            className="text-base font-semibold tracking-tight text-brand-text sm:text-[1.0625rem]"
+          >
             Global Lenz について
           </h2>
           <button
@@ -125,9 +128,31 @@ export default function AboutModal({ open, onClose }: AboutModalProps) {
                   <IconNewspaper className="h-5 w-5" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-brand-text">参照ソース</p>
+                  <p className="text-sm font-semibold text-brand-text">
+                    参照ソース
+                  </p>
                   <p className="mt-1 text-[13px] leading-snug text-brand-muted">
-                    NHK（<strong className="font-semibold text-brand-text">日本</strong>）、BBC（<strong className="font-semibold text-brand-text">イギリス</strong>）、CNN（<strong className="font-semibold text-brand-text">アメリカ</strong>）、Doordarshan（<strong className="font-semibold text-brand-text">インド</strong>）、Al Jazeera（<strong className="font-semibold text-brand-text">カタール</strong>）の5媒体
+                    NHK（
+                    <strong className="font-semibold text-brand-text">
+                      日本
+                    </strong>
+                    ）、BBC（
+                    <strong className="font-semibold text-brand-text">
+                      イギリス
+                    </strong>
+                    ）、CNN（
+                    <strong className="font-semibold text-brand-text">
+                      アメリカ
+                    </strong>
+                    ）、Doordarshan（
+                    <strong className="font-semibold text-brand-text">
+                      インド
+                    </strong>
+                    ）、Al Jazeera（
+                    <strong className="font-semibold text-brand-text">
+                      カタール
+                    </strong>
+                    ）の5媒体
                   </p>
                 </div>
               </li>
@@ -136,7 +161,9 @@ export default function AboutModal({ open, onClose }: AboutModalProps) {
                   <IconChat className="h-5 w-5" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-brand-text">話のネタおすすめ度</p>
+                  <p className="text-sm font-semibold text-brand-text">
+                    話のネタおすすめ度
+                  </p>
                   <p className="mt-1 text-[13px] leading-snug text-brand-muted">
                     アイスブレイクとして機能しやすいかの指標です
                   </p>
@@ -147,7 +174,9 @@ export default function AboutModal({ open, onClose }: AboutModalProps) {
                   <IconSplit className="h-5 w-5" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-brand-text">主張のバラつき度</p>
+                  <p className="text-sm font-semibold text-brand-text">
+                    主張のバラつき度
+                  </p>
                   <p className="mt-1 text-[13px] leading-snug text-brand-muted">
                     メディア間の主張の違いの指標です
                   </p>
