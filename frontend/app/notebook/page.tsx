@@ -157,27 +157,27 @@ export default function NotebookPage() {
 
   return (
     <RequireAuth>
-      <div className="relative min-h-screen bg-brand-canvas p-4 pb-28">
+      <div className="relative min-h-screen bg-[#FAF0E6] p-5 pb-32 text-[#1E2761]">
         <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col">
           {/* --- ヘッダー部分 --- */}
-          <div className="relative mb-8 flex items-center justify-center py-2">
-            {/* タイトル */}
-            <h1 className="text-xl font-bold tracking-tight text-brand-text">
+          <div className="relative mb-10 flex items-center justify-between pb-3 border-b-2 border-[#1E2761]">
+            <h1 className="text-2xl font-extrabold tracking-tighter text-[#028090]">
               ネタ帳リスト
             </h1>
-            {/* 編集ボタン */}
+
+            {/*  編集ボタン */}
             <button
               onClick={() => {
                 if (isEditMode) {
-                  handleDeleteSelected(); // モード中なら削除実行
+                  handleDeleteSelected();
                 } else {
-                  setIsEditMode(true); // モード中でなければ編集開始
+                  setIsEditMode(true);
                 }
               }}
-              className={`absolute right-0 top-1/2 -translate-y-1/2 px-3 py-1 rounded-full text-xs font-bold transition-all shadow-sm outline-none focus:ring-0 ${
+              className={`px-5 py-2 rounded-full text-sm font-bold transition-all shadow-md outline-none focus:ring-0 ${
                 isEditMode
-                  ? 'bg-orange-400 text-white hover:bg-orange-400' // 実行ボタン
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200' // 編集開始ボタン
+                  ? 'bg-[#E8603C] text-white hover:bg-[#E8603C]/90'
+                  : 'bg-[#028090] text-white hover:bg-[#028090]/90'
               }`}
             >
               {isEditMode
@@ -189,22 +189,21 @@ export default function NotebookPage() {
           </div>
 
           {loading ? (
-            <div className="flex justify-center pt-20 text-gray-400">
+            <div className="flex justify-center pt-20 text-[#FAF0E6]/80 font-medium">
               読み込み中...
             </div>
           ) : isEmpty ? (
             <EmptyState />
           ) : (
-            <div className="flex flex-col gap-5">
-              {/* まとめた groupedTopics を使う */}
+            <div className="flex flex-col gap-6">
               {groupedTopics.map((group: any, index: number) => (
                 <div
                   key={`group-${index}`}
-                  className="bg-[#D1EBD8] text-[#2D4A36] px-8 py-7 rounded-3xl shadow-sm relative overflow-hidden"
+                  className="bg-[#FAF0E6] text-[#1E2761] p-7 rounded-3xl shadow-lg relative overflow-hidden border border-[#1E2761]/30"
                 >
-                  {/* 日付とトピック名*/}
-                  <div className="flex gap-4 font-bold text-[15px] mb-3">
-                    <span className="tabular-nums">
+                  {/* 日付 */}
+                  <div className="flex items-center gap-4 mb-5 pb-2 border-b border-[#028090]/20">
+                    <span className="tabular-nums font-extrabold text-lg text-[#028090]">
                       {group.created_at
                         ? new Date(group.created_at).toLocaleDateString(
                             'ja-JP',
@@ -212,7 +211,8 @@ export default function NotebookPage() {
                           )
                         : '--/--'}
                     </span>
-                    <span>
+                    {/* トピック名 */}
+                    <span className="text-lg font-extrabold tracking-tight">
                       {group.country_summaries?.topic_name ||
                         group.comparison_summary?.topic_name ||
                         group.topic_name ||
@@ -221,36 +221,52 @@ export default function NotebookPage() {
                   </div>
 
                   {/* リンク/選択ボタンをまとまって表示 */}
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-3">
                     {group.links.map((link: any) => (
                       <div key={link.favorite_id} className="relative">
                         {isEditMode ? (
+                          // 編集モード時のチェックボタン
                           <button
                             onClick={() => toggleSelect(link.favorite_id)}
-                            className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-[14px] border transition-all ${
+                            className={`flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-sm font-semibold border-2 transition-all ${
                               selectedIds.has(link.favorite_id)
-                                ? 'bg-orange-400 text-white border-orange-400'
-                                : 'bg-white/40 text-[#2D4A36] border-[#2D4A36]/10'
+                                ? 'bg-[#E8603C] text-white border-[#E8603C]'
+                                : 'bg-[#FAF0E6] text-[#1E2761] border-[#028090]'
                             }`}
                           >
+                            {/* チェックボックス */}
                             <input
                               type="checkbox"
                               readOnly
                               checked={selectedIds.has(link.favorite_id)}
-                              className="pointer-events-none h-3 w-3 accent-orange-600"
+                              className="pointer-events-none h-4 w-4 accent-[#E8603C]"
                             />
                             {link.label}
                           </button>
                         ) : (
+                          // 通常モード時のリンクボタン
                           <Link
                             href={
                               link.type === 'country'
                                 ? `/topic/${link.target_id}`
                                 : `/comparison/${link.target_id}`
                             }
-                            className="px-4 py-1.5 bg-white/60 text-[#2D4A36] rounded-lg text-[14px] border border-[#2D4A36]/10 hover:bg-white transition-colors"
+                            className="px-5 py-2.5 bg-[#FAF0E6] text-[#1E2761] rounded-xl text-sm font-bold shadow hover:bg-[#FAF0E6]/90 transition-colors flex items-center gap-2"
                           >
-                            {link.label}
+                            {/* アイコン */}
+                            <span>{link.label}</span>
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-4 w-4"
+                              viewBox="0 0 20 20"
+                              fill="currentColor"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
                           </Link>
                         )}
                       </div>
@@ -263,23 +279,23 @@ export default function NotebookPage() {
         </div>
 
         {/* ログアウトボタン */}
-        <div className="mx-auto mt-8 w-full flex justify-center">
+        <div className="mx-auto mt-12 w-full flex justify-center">
           <button
             type="button"
             onClick={handleLogout}
-            className="w-auto px-10 py-2 rounded-full border border-emerald-200/90 bg-emerald-50 py-2.5 text-sm font-medium text-emerald-900"
+            className="text-xs font-bold text-[#1E2761]/40 hover:text-[#E8603C] transition-colors"
           >
             ログアウト
           </button>
         </div>
 
-        {/* トースト表示 */}
+        {/* --- トースト表示 --- */}
         {toast.visible && (
-          <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-bottom-4 duration-300">
-            <div className="bg-gray-800/90 backdrop-blur-md text-white px-6 py-3 rounded-full shadow-lg text-sm font-medium flex items-center gap-2">
+          <div className="fixed bottom-28 left-1/2 -translate-x-1/2 z-[110] animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <div className="bg-[#E8603C] text-white px-7 py-3.5 rounded-full shadow-2xl text-sm font-bold flex items-center gap-2">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4 text-amber-400"
+                className="h-5 w-5 text-white"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -287,7 +303,7 @@ export default function NotebookPage() {
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  strokeWidth={2}
+                  strokeWidth={3}
                   d="M5 13l4 4L19 7"
                 />
               </svg>
