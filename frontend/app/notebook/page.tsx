@@ -16,7 +16,11 @@ export default function NotebookPage() {
   const [loading, setLoading] = useState(true);
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
-  // const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
+  const [toastVisible, setToastVisible] = useState(false);
+  const [toast, setToast] = useState<{ message: string; visible: boolean }>({
+    message: '',
+    visible: false,
+  });
 
   // --- DBからデータを取得する処理 ---
   useEffect(() => {
@@ -60,8 +64,6 @@ export default function NotebookPage() {
 
   const isEmpty = useMemo(() => items.length === 0, [items.length]);
 
-  // const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
-
   // チェックボックスのON/OFF
   const toggleSelect = (id: number) => {
     const newSet = new Set(selectedIds);
@@ -73,19 +75,26 @@ export default function NotebookPage() {
     setSelectedIds(newSet);
   };
 
+  // トースト表示関数（３秒間表示）
+  const showToast = (message: string) => {
+    setToast({ message, visible: true });
+    setTimeout(() => {
+      setToast({ message: '', visible: false });
+    }, 3000);
+  };
+
   // 一括削除実行
   const handleDeleteSelected = async () => {
-    if (selectedIds.size === 0) {
+    // 選択されている件数を記憶
+    const deleteCount = selectedIds.size;
+    if (deleteCount === 0) {
       setIsEditMode(false); // 何も選んでなければモード終了
       return;
     }
 
-    if (!confirm(`${selectedIds.size}件のネタを削除してもよろしいですか？`))
-      return;
-
     try {
       const token = session?.access_token;
-
+      // 各削除リクエストを並列で実行
       const deletePromises = Array.from(selectedIds).map((id) =>
         fetch(`http://localhost:8000/api/favorites/${id}`, {
           method: 'DELETE',
@@ -95,7 +104,7 @@ export default function NotebookPage() {
 
       await Promise.all(deletePromises);
 
-      // 🌟 画面から消す (item.favorite_id なのか item.id なのか、DBのキーに合わせてください)
+      // 画面上のリストを更新
       setItems((prev) =>
         prev.filter((item) => !selectedIds.has(item.favorite_id))
       );
@@ -103,9 +112,11 @@ export default function NotebookPage() {
       // 後片付け
       setSelectedIds(new Set());
       setIsEditMode(false);
-      alert('削除しました');
+
+      showToast(`${deleteCount}件のネタを削除しました！`);
     } catch (error) {
       console.error('削除失敗:', error);
+      showToast('削除に失敗しました');
     }
   };
 
@@ -261,6 +272,29 @@ export default function NotebookPage() {
             ログアウト
           </button>
         </div>
+
+        {/* トースト表示 */}
+        {toast.visible && (
+          <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <div className="bg-gray-800/90 backdrop-blur-md text-white px-6 py-3 rounded-full shadow-lg text-sm font-medium flex items-center gap-2">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4 text-amber-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+              {toast.message}
+            </div>
+          </div>
+        )}
       </div>
     </RequireAuth>
   );
