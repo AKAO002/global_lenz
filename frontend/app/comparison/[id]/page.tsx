@@ -78,6 +78,13 @@ export default function ComparePage() {
         console.log('ネタ帳に追加中...');
         const isComparisonPage =
           window.location.pathname.includes('comparison');
+        const realId = comparison?.comparison_id || comparison?.id;
+
+        if (!realId) {
+          alert('データの読み込みが完了するまで保存できません');
+          return;
+        }
+
         const response = await fetch(`http://localhost:8000/api/favorites/`, {
           method: 'POST',
           headers: {
@@ -86,7 +93,9 @@ export default function ComparePage() {
           },
           body: JSON.stringify({
             [isComparisonPage ? 'comparison_summary_id' : 'country_summary_id']:
-              parseInt(id),
+              realId,
+            topic_name: comparison.topic_name,
+            type: isComparisonPage ? 'comparison' : 'country',
           }),
         });
 
