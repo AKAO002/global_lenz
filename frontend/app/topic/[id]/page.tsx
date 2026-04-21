@@ -168,18 +168,17 @@ export default function TopicPage({
     <RequireAuth>
       {' '}
       {/* これで未ログインは弾く */}
-      <div className="p-6 max-w-md mx-auto bg-[#FDFBF6] min-h-screen text-gray-800">
+      <div className="p-6 max-w-md mx-auto bg-[#FDFBF6] min-h-screen pt-10 text-gray-800">
         {/* ヘッダーエリア*/}
         <header className="flex items-center justify-between mb-8 pb-3 border-b border-gray-200">
           <div className="flex items-baseline gap-2">
             {/* 日付*/}
             <h1 className="text-xl font-bold">
-              {new Date()
-                .toLocaleDateString('ja-JP', {
-                  month: 'long',
-                  day: 'numeric',
-                  weekday: 'short',
-                })}
+              {new Date().toLocaleDateString('ja-JP', {
+                month: 'long',
+                day: 'numeric',
+                weekday: 'short',
+              })}
             </h1>
           </div>
 

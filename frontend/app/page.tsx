@@ -142,7 +142,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-brand-canvas">
-      <div className="relative mx-auto min-h-screen w-full max-w-md border border-brand-border/50 bg-brand-canvas text-brand-text shadow-soft sm:rounded-b-[2rem]">
+      <div className="relative mx-auto min-h-screen w-full max-w-md border-x border-b border-brand-border/50 bg-brand-canvas text-brand-text shadow-soft sm:rounded-b-[2rem] flex flex-col pt-10">
         {/* 日付 + 検索窓 */}
         {/* ヘッダー全体 */}
         <header className="p-4 px-6 flex items-center justify-between gap-4">

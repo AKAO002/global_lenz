@@ -165,7 +165,7 @@ export default function ComparePage() {
   }
 
   return (
-    <div className="min-h-screen bg-brand-canvas pb-10">
+    <div className="min-h-screen pt-10bg-brand-canvas pb-10">
       <div className="mx-auto min-h-screen w-full max-w-md rounded-b-3xl border border-brand-border/50 bg-brand-canvas p-6 shadow-soft sm:rounded-b-[2rem]">
         {/* ヘッダーエリア*/}
         <header className="mb-8 flex items-center justify-between border-b border-brand-border pb-3">
@@ -209,11 +209,26 @@ export default function ComparePage() {
             </svg>
           </button>
         </header>
-
         <div className="space-y-6">
-          <p className="mb-6 text-center font-bold text-brand-text">
-            5カ国比較要約
-          </p>
+          {/* タイトルと星をまとめて中央揃え */}
+          <div className="flex flex-col items-center mb-6">
+            <p className="font-bold text-brand-text">5カ国比較要約</p>
+
+            {/* 🌟 バラツキ度の表示（カプセルなし・中央揃え） */}
+            <div className="flex items-center gap-1 mt-1">
+              <span className="text-[11px] font-bold text-brand-text">
+                バラツキ度：
+              </span>
+              {comparison && (
+                <span className="text-[11px] text-amber-500 tracking-wider">
+                  {'★'.repeat(comparison.variance_score || 0)}
+                  <span className="text-gray-200">
+                    {'★'.repeat(5 - (comparison.variance_score || 0))}
+                  </span>
+                </span>
+              )}
+            </div>
+          </div>
 
           {comparison ? (
             <div className="space-y-6">

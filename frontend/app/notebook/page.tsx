@@ -160,7 +160,7 @@ export default function NotebookPage() {
 
   return (
     <RequireAuth>
-      <div className="relative min-h-screen bg-brand-canvas p-5 pb-32">
+      <div className="relative min-h-screen pt-10 bg-brand-canvas p-5 pb-32">
         <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col">
           {/* --- ヘッダー部分 --- */}
           <div className="relative mb-10 flex items-center justify-between pb-3 border-b-2 border-[#1E2761]">
@@ -172,7 +172,7 @@ export default function NotebookPage() {
             <button
               onClick={() => {
                 if (isEditMode) {
-                  if (selectedIds.size > 0) {
+                  if (selectedIds.length > 0) {
                     handleDeleteSelected();
                   } else {
                     setIsEditMode(false);
@@ -181,13 +181,27 @@ export default function NotebookPage() {
                   setIsEditMode(true);
                 }
               }}
-              className="flex items-center justify-center rounded-full border border-brand-border/70 bg-brand-accent-softer/40 px-4 py-1.5 transition-all active:opacity-70"
+              className={`flex items-center justify-center rounded-full border transition-all px-4 py-1.5 active:opacity-70 ${
+                isEditMode && selectedIds.length > 0
+                  ? 'border-orange-400 bg-orange-400'
+                  : 'border-brand-border/70 bg-brand-accent-softer/40'
+              }`}
             >
-              {isEditMode
-                ? selectedIds.length > 0
-                  ? `${selectedIds.length}件を削除`
-                  : 'キャンセル'
-                : '編集'}
+              <span
+                className={`text-[11px] font-bold ${
+                  !isEditMode
+                    ? 'text-[#1E2761]' // 通常時はネイビー
+                    : selectedIds.length > 0
+                      ? 'text-white' // 🌟 削除ボタン時は背景に合わせて白文字
+                      : 'text-[#E8603C]' // キャンセルはコーラルレッド
+                }`}
+              >
+                {isEditMode
+                  ? selectedIds.length > 0
+                    ? `${selectedIds.length}件を削除`
+                    : 'キャンセル'
+                  : '編集'}
+              </span>
             </button>
           </div>
 
