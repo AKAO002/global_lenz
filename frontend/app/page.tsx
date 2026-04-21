@@ -198,15 +198,18 @@ export default function HomePage() {
               {/* 2. テキスト演出 */}
               <div className="space-y-2 text-center">
                 <h2 className="animate-pulse text-xl font-bold text-brand-text">
-                  AIが世界中を分析中...
+                  {query ? 'AIが世界中を分析中...' : '最新ニュースを取得中...'}
                 </h2>
                 <div className="flex flex-col items-center">
-                  <p className="text-sm font-medium text-brand-muted">
-                    「{searchKeyword}」に関する視点を抽出しています
-                  </p>
-                  <p className="mt-4 text-[10px] uppercase tracking-widest text-brand-muted">
-                    Fetching from Global Media
-                  </p>
+                  {query ? (
+                    <p className="text-sm font-medium text-brand-muted">
+                      「{searchKeyword}」に関する視点を抽出しています
+                    </p>
+                  ) : (
+                    <p className="text-sm font-medium text-brand-muted">
+                      今日のトピックを読み込んでいます
+                    </p>
+                  )}
                 </div>
               </div>
 
