@@ -40,6 +40,12 @@ def discover_trending_topics(all_headlines):
   → NG: 「ロシア侵攻」   OK: 「ウクライナ停戦交渉」（停戦という事象で統合）
 - query_en も同様に具体的な事象語を含めること。「Trump Administration」「Russia」のような広すぎるクエリは禁止。
 
+### トピック名とquery_enの一致ルール（最重要）
+- トピック名に含まれる国名・地名と、query_enの最初の単語は必ず一致させること
+- 例：トピック名「ルーマニア選挙」→ query_en は「Romania Election」（Bulgariaは禁止）
+- 例：トピック名「カナダ 貿易」→ query_en は「Canada Tariffs」（US Canadaは可、米韓は禁止）
+- トピック名を決めてからquery_enを生成すること。逆順は禁止。
+
 ### 検索語の生成ルール
 
 **query_en**（英語メディア向け・GoogleニュースRSS検索用）
@@ -138,18 +144,21 @@ def deduplicate_topics(topics):
 
 {topic_list_str}
 
-### 重複と判定するケース（積極的に重複と判定すること）
-- 同じ国・地域の同じ紛争・交渉・合意を別の角度で表現しているだけ → 重複
-- 上位概念と下位概念の関係（例：「ロシア侵攻」はウクライナ停戦の上位概念） → 重複
+### 重複と判定するケース
+- 同じ国・地域の全く同じ紛争・交渉・合意を、ほぼ同じ言葉で表現しているだけ → 重複
 - 具体例：
-  「ロシア侵攻」と「ウクライナ停戦」→ 重複（同じ紛争の異なる側面）
   「ロシア・ウクライナ戦争」と「ウクライナ停戦合意」→ 重複
-  「米・イラン交渉」と「イラン停戦」→ 重複（同じ合意プロセス）
-  「米・イラン合意」と「イラン停戦合意」→ 重複
+  「米・イラン交渉」と「イラン停戦合意」→ 重複（同じ合意プロセス）
 
-### 重複でないケース
-- 完全に異なる国・地域の出来事（例：「ハンガリー選挙」と「ウクライナ停戦」→ 重複でない）
-- テーマが異なる（例：「ホルムズ海峡」と「イラン合意」→ 海峡問題と外交は別）
+### 絶対に重複としてはいけないケース（最重要）
+- query_enの最初の単語が異なる場合は重複でない
+  例：「Ukraine ～」と「Hormuz ～」→ 主語が違うので絶対に重複でない
+  例：「Romania ～」と「Ukraine ～」→ 国が違うので絶対に重複でない
+- 異なる地域・国が主語のトピックは絶対に統合しない
+- テーマが異なるトピックは絶対に統合しない
+  例：「ホルムズ海峡封鎖」と「ウクライナ停戦」→ 地域もテーマも違うので重複でない
+- 判断が迷う場合は必ず重複としない（duplicatesを空リストにする）
+- 無理に統合して意味不明なトピック名を作ることは厳禁
 
 重複がある場合は全ての重複ペアを返してください。
 重複がない場合は duplicates を空リストにしてください。
@@ -221,7 +230,11 @@ def supplement_topics(topics, all_headlines, current_count, target=6):
 - 禁止: 一国内の司法・建設・政治スキャンダル等の国内ニュース
 - 禁止: 州・地方レベルの選挙（例：カリフォルニア州知事選）。国政選挙のみ対象。
 - 禁止: 「トランプ政権」「ロシア」等の主体だけのトピック
-- 禁止クエリ語: Scandal / Administration / Policy / Issue / Situation / Crisis
+- 禁止クエリ語: Scandal / Administration / Policy / Issue / Situation / Crisis / Relations / Agreement / Improvement / Tensions / Concerns / Ties
+- query_enは必ず「固有名詞（国名・地名・組織名）＋具体的な事象語」の2語にすること
+- 抽象的な名詞との組み合わせは禁止。必ず動詞的・事象的な語を使うこと
+- 正しい例：「Canada Tariffs」「Canada Trade」「Mexico Dispute」「Hungary Election」
+- 誤った例：「Canada Economic Relations」「Mexico Diplomatic Crisis」「Ukraine Tensions」
 - 必ず具体的な事象語（Ceasefire / Attack / Election / Tariffs / Sanctions / Strike / Talks 等）を含めること
 
 ### 検索語ルール
@@ -263,9 +276,11 @@ def is_article_relevant(media_key, topic_name, article_title, query):
 記事タイトル: {article_title}
 
 判断基準：
-- 同じ地域・国・組織が関係していれば「はい」
+- 同じ地域・国・組織が少しでも関係していれば「はい」
+- トピックの関連語（停戦・封鎖・攻撃など）が記事に含まれていれば「はい」
 - 全く異なるテーマ・地域の記事であれば「いいえ」
-- 判断が難しい場合は「はい」
+- 少しでも関連する可能性があれば「はい」
+- 迷ったら必ず「はい」
 """
     response = client.chat.completions.create(
         model="gpt-4o-mini",
@@ -389,6 +404,9 @@ def _check_topic_name_consistency(topics):
         "trump":   ["トランプ"],
         "hormuz":  ["ホルムズ", "封鎖", "海峡"],  # Hormuz系は封鎖・海峡も可
         "us":      ["アメリカ", "米"],
+        "canada":  ["カナダ"],      
+        "bulgaria":["ブルガリア"],  
+        "romania": ["ルーマニア"],
     }
     for t in topics:
         query_first = t["query_en"].split()[0].lower()

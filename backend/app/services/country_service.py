@@ -169,6 +169,7 @@ def get_home_country_summaries(is_login: bool,auth_user_id: str | None):
             )
             """
         )
+        .is_("is_search", False)
         .order("created_at", desc=True)
         .limit(6)
         .execute()
