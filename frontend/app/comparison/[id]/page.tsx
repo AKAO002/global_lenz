@@ -4,6 +4,7 @@
 import React, { useState, useEffect, useId, useMemo, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { deleteFavorite } from '@/lib/api/favorites';
 import { normalizeDifficultWords } from '@/lib/normalizeDifficultWords';
 import {
   DifficultWordsGlossaryModal,
@@ -40,35 +41,43 @@ export default function ComparePage() {
     setGlossaryFocusedTerm(null);
   }, []);
 
-  useEffect(() => {
-    if (!id) return;
+  const fetchComparisonData = async () => {
+    try {
+      if (!id) return;
 
-    const fetchComparisonData = async () => {
-      try {
-        setLoading(true);
+      setLoading(true);
 
-        const res = await fetch(
-          `http://localhost:8000/api/comparison-summaries/${id}/detail`
-        );
+      const token = session?.access_token;
 
-        if (!res.ok) throw new Error('取得に失敗しました');
-        const data = await res.json();
-
-        if (res.ok) {
-          setComparison(data);
-          if (data.is_already_saved) {
-            setIsSaved(true);
-          }
+      const res = await fetch(
+        `http://localhost:8000/api/comparison-summaries/${id}/detail`,
+        {
+          headers: token
+            ? {
+                Authorization: `Bearer ${token}`,
+              }
+            : {},
         }
-      } catch (err) {
-        console.error('比較データの取得に失敗しました:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
+      );
 
+      if (!res.ok) throw new Error('取得に失敗しました');
+      const data = await res.json();
+
+      // データ保存
+      setComparison(data);
+
+      // 保存状態をそのまま反映
+      setIsSaved(data?.is_already_saved);
+    } catch (err) {
+      console.error('比較データの取得に失敗しました:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchComparisonData();
-  }, [id, user]);
+  }, [id, session]);
 
   // ネタ帳保存処理
   const handleSaveToNotebook = async () => {
@@ -79,45 +88,61 @@ export default function ComparePage() {
         return;
       }
 
-      // すでに保存済みなら何もしない
-      if (isSaved) return;
-
       const token = session.access_token;
-      // 保存処理
-      const isComparisonPage = window.location.pathname.includes('comparison');
-      const realId = comparison?.comparison_id || comparison?.id;
 
-      if (!realId) {
-        alert('データの読み込みが完了するまで保存できません');
-        return;
-      }
+      // ログイン済み→保存処理
+      if (isSaved) {
+        // 削除処理
+        await deleteFavorite({
+          token,
+          id,
+          type: 'comparison',
+        });
 
-      const response = await fetch(`http://localhost:8000/api/favorites/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session?.access_token}`,
-        },
-        body: JSON.stringify({
-          [isComparisonPage ? 'comparison_summary_id' : 'country_summary_id']:
-            realId,
-          topic_name: comparison.topic_name,
-          type: isComparisonPage ? 'comparison' : 'country',
-        }),
-      });
+        // DB状態を再取得
+        await fetchComparisonData();
 
-      if (!response.ok) {
-        const err = await response.json();
-        if (err.detail?.includes('already exists')) {
-          setIsSaved(true);
+        showToast('ネタ帳から削除しました');
+      } else {
+        // 保存処理
+        console.log('ネタ帳に追加中...');
+        const isComparisonPage =
+          window.location.pathname.includes('comparison');
+        const realId = comparison?.comparison_id || comparison?.id;
+
+        if (!realId) {
+          alert('データの読み込みが完了するまで保存できません');
           return;
         }
-        alert('保存失敗: ' + (err.detail || 'エラー'));
-        return;
-      }
 
-      setIsSaved(true); // 色を真鍮色（アンバー）にする
-      showToast('ネタ帳に追加しました！');
+        const response = await fetch(`http://localhost:8000/api/favorites/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session?.access_token}`,
+          },
+          body: JSON.stringify({
+            [isComparisonPage ? 'comparison_summary_id' : 'country_summary_id']:
+              realId,
+            topic_name: comparison.topic_name,
+            type: isComparisonPage ? 'comparison' : 'country',
+          }),
+        });
+
+        if (!response.ok) {
+          const err = await response.json();
+          if (err.detail?.includes('already exists')) {
+            await fetchComparisonData();
+            return;
+          }
+          alert('保存失敗: ' + (err.detail || 'エラー'));
+          return;
+        }
+        // DB状態を再取得
+        await fetchComparisonData();
+
+        showToast('ネタ帳に追加しました！');
+      }
     } catch (error) {
       console.error('操作に失敗しました:', error);
     }

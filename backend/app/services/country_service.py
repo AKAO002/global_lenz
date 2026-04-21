@@ -28,7 +28,7 @@ def get_country_summary_by_id(summary_id: int):
 
     return response.data
 
-def get_country_detail(country_id: int):
+def get_country_detail(country_id: int,public_user_id: str | None = None):
 
     response = (
         supabase
@@ -53,7 +53,7 @@ def get_country_detail(country_id: int):
             """
         )
         .eq("id", country_id)
-        .single()
+        .maybe_single()
         .execute()
     )
 
@@ -77,10 +77,27 @@ def get_country_detail(country_id: int):
         .execute()
     )
 
-    url = None
+    url = article_res.data[0]["url"] if article_res.data else None
 
-    if article_res.data:
-        url = article_res.data[0]["url"]
+     # favorites判定
+
+    is_already_saved = False
+
+    if public_user_id:
+
+        fav = (
+            supabase
+            .table("favorites")
+            .select("id")
+            .eq("user_id", public_user_id)
+            .eq("country_summary_id", country_id)
+            .limit(1)
+            .maybe_single()
+            .execute()
+        )
+
+        if fav and fav.data:
+            is_already_saved = True
 
     return {
 
@@ -106,7 +123,10 @@ def get_country_detail(country_id: int):
             data["country_summary"],
 
         "url":
-            url
+            url,
+
+        "is_already_saved": 
+            is_already_saved
     }
 
 def get_home_country_summaries(is_login: bool,auth_user_id: str | None):
@@ -132,7 +152,10 @@ def get_home_country_summaries(is_login: bool,auth_user_id: str | None):
             topic_name,
             created_at,
             comparison_summaries (
-                id
+                id,
+                comparison_summary_articles (
+                    id
+                )
             ),
 
             country_summaries (
@@ -186,10 +209,21 @@ def get_home_country_summaries(is_login: bool,auth_user_id: str | None):
             })
         
         comp_id = None
-        if "comparison_summaries" in topic and len(topic["comparison_summaries"]) > 0:
-            # 最初の1件のIDを取得
-            comp_id = topic["comparison_summaries"][0]["id"]
+        is_comparison_favoritable = False
 
+        if (
+            "comparison_summaries" in topic 
+            and len(topic["comparison_summaries"]) > 0
+        ):
+            # 最初の1件のIDを取得
+            comp = topic["comparison_summaries"][0]
+            comp_id = comp["id"]
+
+            articles = comp.get("comparison_summary_articles")
+
+            if articles:
+                is_comparison_favoritable = True
+                        
         results.append({
 
             "topic_id": topic["id"],
@@ -197,6 +231,8 @@ def get_home_country_summaries(is_login: bool,auth_user_id: str | None):
             "topic_name": topic["topic_name"],
 
             "comparison_id": comp_id,
+
+            "is_comparison_favoritable": is_comparison_favoritable,
 
             "created_at": topic["created_at"],
 

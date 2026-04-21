@@ -1,4 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
+
+from app.db.supabase import supabase
+
 from app.core.auth import (get_current_user_optional,get_current_user) 
 
 from app.services.country_service import (
@@ -51,10 +54,27 @@ def read_country_summary(id: int):
 @router.get("/{id}/detail")
 def read_country_detail(
     id: int,
-    user=Depends(get_current_user),
+    user=Depends(get_current_user_optional),
     ):
 
-    result = get_country_detail(id)
+    public_user_id = None
+
+    if user:
+        auth_user_id = user["sub"]
+
+        user_res = (
+            supabase
+            .table("users")
+            .select("id")
+            .eq("auth_user_id", auth_user_id)
+            .maybe_single()
+            .execute()
+        )
+
+        if user_res and user_res.data:
+            public_user_id = user_res.data["id"]
+
+    result = get_country_detail(id,public_user_id)
 
     if not result:
         raise HTTPException(

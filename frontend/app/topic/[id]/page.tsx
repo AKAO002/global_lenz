@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import RequireAuth from '@/components/RequireAuth';
+import { deleteFavorite } from '@/lib/api/favorites';
 import Image from 'next/image';
 
 // 国画像
@@ -35,12 +36,16 @@ export default function TopicPage({
       setLoading(true);
       try {
         const apiUrl = `http://localhost:8000/api/country-summaries/${id}/detail`;
-        const token = localStorage.getItem('access_token');
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        const token = session?.access_token;
+
         const res = await fetch(apiUrl, {
-          headers: {
-            Authorization: token ? `Bearer ${token}` : '',
-          },
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
+
         // 未ログインはログイン画面へ遷移
         if (res.status === 401) {
           router.push('/login'); // ← 未ログインは即遷移
@@ -50,10 +55,14 @@ export default function TopicPage({
         if (!res.ok) throw new Error('データの取得に失敗しました');
 
         const data = await res.json();
+
         if (data && typeof data === 'object') {
           setTopic(data);
+
+          setIsSaved(data.is_already_saved ?? false);
         } else {
           setTopic(null);
+          setIsSaved(false);
         }
       } catch (error) {
         console.error('取得失敗:', error);
@@ -88,6 +97,7 @@ export default function TopicPage({
       if (isSaved) return;
       const token = session.access_token;
 
+<<<<<<< HEAD
       // 保存処理
       const isComparisonPage = window.location.pathname.includes('comparison');
       const response = await fetch('http://localhost:8000/api/favorites/', {
@@ -101,6 +111,20 @@ export default function TopicPage({
             parseInt(id),
         }),
       });
+=======
+      if (isSaved) {
+        // 削除処理
+        console.log('ネタ帳から削除中...');
+
+        const isComparisonPage =
+          window.location.pathname.includes('comparison');
+
+        await deleteFavorite({
+          token,
+          id,
+          type: isComparisonPage ? 'comparison' : 'country',
+        });
+>>>>>>> develop
 
       if (!response.ok) {
         const err = await response.json();
@@ -193,16 +217,16 @@ export default function TopicPage({
         {/* 要約テキスト */}
         <div className="space-y-6">
           <p className="text-center font-bold mb-6">
-            {topic.topic_name}について
+            {topic?.topic_name}について
           </p>
 
           {/* 国旗画像エリア */}
           <div className="flex justify-center my-6">
-            {flagImages[topic.country_name] && (
+            {flagImages[topic?.country_name] && (
               <div className="relative w-28 h-20 transition-opacity duration-300 hover:opacity-100">
                 <Image
-                  src={flagImages[topic.country_name]}
-                  alt={`${topic.country_name}の国旗`}
+                  src={flagImages[topic?.country_name]}
+                  alt={`${topic?.country_name}の国旗`}
                   fill
                   sizes="112px"
                   priority
@@ -214,7 +238,7 @@ export default function TopicPage({
 
           {/* 要約本文 */}
           <p className="text-sm leading-relaxed tracking-wider">
-            {topic.summary}
+            {topic?.summary}
           </p>
 
           {/* 引用元 */}
