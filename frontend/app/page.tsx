@@ -153,7 +153,7 @@ export default function HomePage() {
 
           <form
             onSubmit={handleSearch}
-            /* 🌟 borderの色を [#028090] に固定し、少し太さを持たせたい場合は border-2 に変更 */
+            /* borderの色を [#028090] に固定し、少し太さを持たせたい場合は border-2 に変更 */
             className="ml-auto flex max-w-[180px] flex-grow items-center rounded-full border border-[#028090] bg-brand-canvas/80 px-3 py-1.5 transition-all focus-within:ring-1 focus-within:ring-[#028090]"
           >
             <input

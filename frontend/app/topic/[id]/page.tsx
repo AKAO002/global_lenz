@@ -191,7 +191,6 @@ export default function TopicPage({
                 : 'text-gray-400 hover:bg-[#E8603C]/5 hover:text-[#E8603C]' // 未保存
             }`}
             title={isSaved ? '保存済み' : 'ネタ帳に追加'}
-            disabled={isSaved} // ボタン自体を無効化
           >
             {/* ネタ帳アイコン */}
             <svg

@@ -52,11 +52,7 @@ export default function ComparePage() {
       const res = await fetch(
         `http://localhost:8000/api/comparison-summaries/${id}/detail`,
         {
-          headers: token
-            ? {
-                Authorization: `Bearer ${token}`,
-              }
-            : {},
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
         }
       );
 
@@ -165,8 +161,8 @@ export default function ComparePage() {
   }
 
   return (
-    <div className="min-h-screen pt-10bg-brand-canvas pb-10">
-      <div className="mx-auto min-h-screen w-full max-w-md rounded-b-3xl border border-brand-border/50 bg-brand-canvas p-6 shadow-soft sm:rounded-b-[2rem]">
+    <div className="min-h-screen bg-brand-canvas">
+      <div className="mx-auto min-h-screen w-full max-w-md border border-brand-border/50 bg-brand-canvas pt-10 p-6 shadow-soft sm:rounded-b-[2rem]">
         {/* ヘッダーエリア*/}
         <header className="mb-8 flex items-center justify-between border-b border-brand-border pb-3">
           <div className="flex items-baseline gap-2">
@@ -190,7 +186,6 @@ export default function ComparePage() {
                 : 'text-gray-400 hover:bg-[#E8603C]/5 hover:text-[#E8603C]' // 未保存
             }`}
             title={isSaved ? '保存済み' : 'ネタ帳に追加'}
-            disabled={isSaved} // buttonタグ自体も無効化
           >
             {/* ネタ帳アイコン */}
             <svg
@@ -209,25 +204,24 @@ export default function ComparePage() {
             </svg>
           </button>
         </header>
-        <div className="space-y-6">
-          {/* タイトルと星をまとめて中央揃え */}
-          <div className="flex flex-col items-center mb-6">
-            <p className="font-bold text-brand-text">5カ国比較要約</p>
 
-            {/* 🌟 バラツキ度の表示（カプセルなし・中央揃え） */}
-            <div className="flex items-center gap-1 mt-1">
-              <span className="text-[11px] font-bold text-brand-text">
-                バラツキ度：
-              </span>
-              {comparison && (
-                <span className="text-[11px] text-amber-500 tracking-wider">
-                  {'★'.repeat(comparison.variance_score || 0)}
-                  <span className="text-gray-200">
-                    {'★'.repeat(5 - (comparison.variance_score || 0))}
-                  </span>
+        {/* タイトルと星をまとめて中央揃え */}
+        <div className="flex flex-col items-center mb-6">
+          <p className="font-bold text-brand-text">5カ国比較要約</p>
+
+          {/* バラツキ度の表示（カプセルなし・中央揃え） */}
+          <div className="flex items-center gap-1 mt-1 pb-10">
+            <span className="text-[11px] font-bold text-brand-text">
+              バラツキ度：
+            </span>
+            {comparison && (
+              <span className="text-[11px] text-amber-500 tracking-wider">
+                {'★'.repeat(comparison.variance_score || 0)}
+                <span className="text-gray-200">
+                  {'★'.repeat(5 - (comparison.variance_score || 0))}
                 </span>
-              )}
-            </div>
+              </span>
+            )}
           </div>
 
           {comparison ? (
@@ -235,10 +229,10 @@ export default function ComparePage() {
               {/* 比較要約 */}
               <div className="border-l-4 border-[#E8603C] py-2 pl-4">
                 <h2 className="mb-2 font-bold text-brand-text">
-                  {comparison.topic_name}
+                  {comparison.topic_name}について
                 </h2>
 
-                <p className="text-sm leading-relaxed text-brand-text">
+                <p className="text-sm leading-relaxed text-brand-text pb-10">
                   {comparison.comparison_summary}
                 </p>
 
