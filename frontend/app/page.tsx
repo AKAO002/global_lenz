@@ -118,7 +118,7 @@ export default function HomePage() {
 
   useEffect(() => {
     const dateStr = new Date().toLocaleDateString('ja-JP', {
-      month: 'numeric',
+      month: 'long',
       day: 'numeric',
       weekday: 'short',
     });
