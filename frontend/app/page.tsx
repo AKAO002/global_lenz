@@ -154,7 +154,7 @@ export default function HomePage() {
           <form
             onSubmit={handleSearch}
             /* borderの色を [#028090] に固定し、少し太さを持たせたい場合は border-2 に変更 */
-            className="ml-auto flex max-w-[180px] flex-grow items-center rounded-full border border-[#028090] bg-brand-canvas/80 px-3 py-1.5 transition-all focus-within:ring-1 focus-within:ring-[#028090]"
+            className="ml-auto flex max-w-[180px] flex-grow items-center rounded-full border bg-gray-50 px-3 py-1.5 transition-all focus-within:ring-1 focus-within:ring-[#028090]"
           >
             <input
               type="text"
@@ -167,7 +167,7 @@ export default function HomePage() {
             {/* 虫眼鏡アイコン */}
             <button
               type="submit"
-              className="ml-1 flex items-center justify-center text-[#028090]"
+              className="ml-1 flex items-center justify-center"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -196,8 +196,8 @@ export default function HomePage() {
                 onClick={() => setActiveTab(tab.topic_id)}
                 className={`rounded-full px-4 py-2 text-xs font-bold transition-all ${
                   activeTab === tab.topic_id
-                    ? 'border-2 border-brand-text bg-brand-canvas text-brand-text shadow-sm'
-                    : 'border border-brand-border bg-brand-canvas/90 text-brand-muted'
+                    ? 'bg-[#E8603C] text-white shadow-sm'
+                    : 'border bg-brand-canvas/90 text-brand-muted'
                 }`}
               >
                 {tab.topic_name}
