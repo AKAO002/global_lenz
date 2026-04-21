@@ -130,6 +130,8 @@ def get_country_detail(country_id: int,public_user_id: str | None = None):
     }
 
 def get_home_country_summaries(is_login: bool,auth_user_id: str | None):
+    from datetime import date          # ← 追加
+    today = date.today().isoformat() 
 
     favorite_ids = set()
 
@@ -169,6 +171,7 @@ def get_home_country_summaries(is_login: bool,auth_user_id: str | None):
             )
             """
         )
+        .gte("created_at", f"{today}T00:00:00") 
         .is_("is_search", False)
         .order("created_at", desc=True)
         .limit(6)
