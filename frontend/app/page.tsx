@@ -51,6 +51,9 @@ export default function HomePage() {
         // バックエンドの s.country をフロントエンド用の s.country_name に変換します
         const formattedTodayData = rawTodayData.map((topic: any) => ({
           ...topic,
+
+          is_comparison_favoritable: topic.is_comparison_favoritable ?? false,
+
           summaries:
             topic.summaries?.map((s: any) => ({
               id: s.id,
@@ -300,11 +303,17 @@ export default function HomePage() {
                   </div>
 
                   <div className="mt-8">
-                    <Link
-                      href={`/comparison/${topic.topic_id}`}
-                      className="block w-full rounded-3xl bg-brand-accent-secondary py-4 text-center font-bold text-white shadow-md transition-opacity hover:opacity-95"
-                    >
-                      5カ国比較レポートを見る
+                    <Link href={`/comparison/${topic.comparison_id}`}>
+                      <button
+                        disabled={!topic.is_comparison_favoritable}
+                        className={`block w-full rounded-3xl bg-brand-accent-secondary py-4 text-center font-bold text-white shadow-md transition-opacity hover:opacity-95 ${
+                          topic.is_comparison_favoritable
+                            ? 'bg-orange-400'
+                            : 'bg-gray-300 cursor-not-allowed'
+                        }`}
+                      >
+                        5カ国比較レポートを見る
+                      </button>
                     </Link>
                   </div>
                 </div>

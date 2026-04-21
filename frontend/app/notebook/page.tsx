@@ -5,6 +5,7 @@ import { useMemo, useState, useEffect } from 'react';
 import RequireAuth from '@/components/RequireAuth';
 import EmptyState from '@/components/notebook/EmptyState';
 import { useAuth } from '@/context/AuthContext';
+import { deleteFavorite } from '@/lib/api/favorites';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -15,37 +16,36 @@ export default function NotebookPage() {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isEditMode, setIsEditMode] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [selectedIds, setSelectedIds] = useState<any[]>([]);
   // const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
 
   // --- DBからデータを取得する処理 ---
-  useEffect(() => {
-    const fetchFavorites = async () => {
-      if (!session?.access_token) return;
+  const fetchFavorites = async () => {
+    if (!session?.access_token) return;
 
-      try {
-        setLoading(true);
-        // バックエンドの「要約付きお気に入り一覧」エンドポイントを叩く
-        const res = await fetch(
-          `http://localhost:8000/api/favorites/with-summaries`,
-          {
-            headers: {
-              Authorization: `Bearer ${session.access_token}`,
-            },
-          }
-        );
-
-        if (res.ok) {
-          const data = await res.json();
-          setItems(data);
+    try {
+      setLoading(true);
+      // バックエンドの「要約付きお気に入り一覧」エンドポイントを叩く
+      const res = await fetch(
+        `http://localhost:8000/api/favorites/with-summaries`,
+        {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
         }
-      } catch (error) {
-        console.error('ネタ帳の取得に失敗しました:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+      );
 
+      if (res.ok) {
+        const data = await res.json();
+        setItems(data);
+      }
+    } catch (error) {
+      console.error('ネタ帳の取得に失敗しました:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
     fetchFavorites();
   }, [session]);
 
@@ -63,45 +63,55 @@ export default function NotebookPage() {
   // const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
   // チェックボックスのON/OFF
-  const toggleSelect = (id: number) => {
-    const newSet = new Set(selectedIds);
-    if (newSet.has(id)) {
-      newSet.delete(id);
-    } else {
-      newSet.add(id);
-    }
-    setSelectedIds(newSet);
+  const toggleSelect = (item: any) => {
+    setSelectedIds((prev) => {
+      const exists = prev.some((i) => i.favorite_id === item.favorite_id);
+
+      if (exists) {
+        return prev.filter((i) => i.favorite_id !== item.favorite_id);
+      }
+
+      return [...prev, item];
+    });
   };
 
   // 一括削除実行
   const handleDeleteSelected = async () => {
-    if (selectedIds.size === 0) {
+    if (selectedIds.length === 0) {
       setIsEditMode(false); // 何も選んでなければモード終了
       return;
     }
 
-    if (!confirm(`${selectedIds.size}件のネタを削除してもよろしいですか？`))
+    if (!confirm(`${selectedIds.length}件のネタを削除してもよろしいですか？`))
       return;
 
     try {
       const token = session?.access_token;
 
-      const deletePromises = Array.from(selectedIds).map((id) =>
-        fetch(`http://localhost:8000/api/favorites/${id}`, {
-          method: 'DELETE',
-          headers: { Authorization: `Bearer ${token}` },
+      const deletePromises = Array.from(selectedIds)
+        .map((item) => {
+          if (!item.target_id) return null;
+
+          return deleteFavorite({
+            token,
+            id: item.target_id,
+            type: item.type,
+          });
         })
-      );
+        .filter(Boolean);
 
       await Promise.all(deletePromises);
 
       // 🌟 画面から消す (item.favorite_id なのか item.id なのか、DBのキーに合わせてください)
-      setItems((prev) =>
-        prev.filter((item) => !selectedIds.has(item.favorite_id))
-      );
+      // setItems((prev) =>
+      //   prev.filter((item) => !selectedIds.has(item.favorite_id))
+      // );
+
+      // 最新取得
+      await fetchFavorites();
 
       // 後片付け
-      setSelectedIds(new Set());
+      setSelectedIds([]);
       setIsEditMode(false);
       alert('削除しました');
     } catch (error) {
@@ -170,8 +180,8 @@ export default function NotebookPage() {
               }`}
             >
               {isEditMode
-                ? selectedIds.size > 0
-                  ? `${selectedIds.size}件を削除`
+                ? selectedIds.length > 0
+                  ? `${selectedIds.length}件を削除`
                   : 'キャンセル'
                 : '編集'}
             </button>
@@ -215,9 +225,17 @@ export default function NotebookPage() {
                       <div key={link.favorite_id} className="relative">
                         {isEditMode ? (
                           <button
-                            onClick={() => toggleSelect(link.favorite_id)}
+                            onClick={() =>
+                              toggleSelect({
+                                favorite_id: link.favorite_id,
+                                type: link.type,
+                                target_id: link.target_id,
+                              })
+                            }
                             className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-[14px] border transition-all ${
-                              selectedIds.has(link.favorite_id)
+                              selectedIds.some(
+                                (item) => item.favorite_id === link.favorite_id
+                              )
                                 ? 'bg-orange-400 text-white border-orange-400'
                                 : 'bg-white/40 text-[#2D4A36] border-[#2D4A36]/10'
                             }`}
@@ -225,7 +243,9 @@ export default function NotebookPage() {
                             <input
                               type="checkbox"
                               readOnly
-                              checked={selectedIds.has(link.favorite_id)}
+                              checked={selectedIds.some(
+                                (item) => item.favorite_id === link.favorite_id
+                              )}
                               className="pointer-events-none h-3 w-3 accent-orange-600"
                             />
                             {link.label}

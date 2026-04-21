@@ -56,8 +56,6 @@ async def verify_jwt(token: str):
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
 ):
-    print("DEBUG credentials:", credentials)
-
 
     if credentials is None:
         raise HTTPException(
@@ -96,5 +94,5 @@ async def get_current_user_optional(
 
         return payload
 
-    except Exception:
+    except Exception as e:
         return None

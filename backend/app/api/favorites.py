@@ -1,5 +1,8 @@
 from fastapi import APIRouter, Query, Depends
+
 from app.core.auth import get_current_user
+
+from app.db.supabase import supabase
 from app.services.user_service import get_public_user_id
 
 from app.services.favorite_service import (
@@ -40,17 +43,43 @@ def add_favorite(
     return create_favorite(favorite_data)
 
 #  ネタ帳から削除
-@router.delete("/{favorite_id}")
+@router.delete("/")
 def remove_favorite(
-    favorite_id: str,
+    country_summary_id: int | None = Query(default=None),
+    comparison_summary_id: int | None = Query(default=None),
     user=Depends(get_current_user)
 ):
 
-    auth_id = user["id"]
+    auth_user_id = user["id"]
 
-    public_user_id = get_public_user_id(auth_id)
+    user_res = (
+        supabase.table("users")
+        .select("id")
+        .eq("auth_user_id", auth_user_id)
+        .maybe_single()
+        .execute()
+    )
 
-    return delete_favorite(favorite_id,public_user_id)
+    public_user_id = user_res.data["id"]
+
+    # ベースクエリ
+    query = (
+        supabase.table("favorites")
+        .delete()
+        .eq("user_id", public_user_id)
+    )
+
+    # country削除
+    if country_summary_id is not None:
+        query = query.eq("country_summary_id", country_summary_id)
+
+    # comparison削除
+    if comparison_summary_id is not None:
+        query = query.eq("comparison_summary_id", comparison_summary_id)
+
+    response = query.execute()
+
+    return response.data
 
 # フロント表示用ネタ帳リスト
 @router.get("/with-summaries")

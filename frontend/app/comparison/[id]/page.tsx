@@ -4,6 +4,7 @@
 import React, { useState, useEffect, useId, useMemo, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { deleteFavorite } from '@/lib/api/favorites';
 import { normalizeDifficultWords } from '@/lib/normalizeDifficultWords';
 import {
   DifficultWordsGlossaryModal,
@@ -40,35 +41,43 @@ export default function ComparePage() {
     setGlossaryFocusedTerm(null);
   }, []);
 
-  useEffect(() => {
-    if (!id) return;
+  const fetchComparisonData = async () => {
+    try {
+      if (!id) return;
 
-    const fetchComparisonData = async () => {
-      try {
-        setLoading(true);
+      setLoading(true);
 
-        const res = await fetch(
-          `http://localhost:8000/api/comparison-summaries/${id}/detail`
-        );
+      const token = session?.access_token;
 
-        if (!res.ok) throw new Error('取得に失敗しました');
-        const data = await res.json();
-
-        if (res.ok) {
-          setComparison(data);
-          if (data.is_already_saved) {
-            setIsSaved(true);
-          }
+      const res = await fetch(
+        `http://localhost:8000/api/comparison-summaries/${id}/detail`,
+        {
+          headers: token
+            ? {
+                Authorization: `Bearer ${token}`,
+              }
+            : {},
         }
-      } catch (err) {
-        console.error('比較データの取得に失敗しました:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
+      );
 
+      if (!res.ok) throw new Error('取得に失敗しました');
+      const data = await res.json();
+
+      // データ保存
+      setComparison(data);
+
+      // 保存状態をそのまま反映
+      setIsSaved(data?.is_already_saved);
+    } catch (err) {
+      console.error('比較データの取得に失敗しました:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchComparisonData();
-  }, [id, user]);
+  }, [id, session]);
 
   // ネタ帳保存処理
   const handleSaveToNotebook = async () => {
@@ -85,13 +94,16 @@ export default function ComparePage() {
       if (isSaved) {
         // 削除処理
         console.log('ネタ帳から削除中...');
-        const res = await fetch(`http://localhost:8000/api/favorites/${id}`, {
-          method: 'DELETE',
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok) throw new Error('削除に失敗しました');
 
-        setIsSaved(false); // 色をグレーに戻す
+        await deleteFavorite({
+          token,
+          id,
+          type: 'comparison',
+        });
+
+        // DB状態を再取得
+        await fetchComparisonData();
+
         showToast('ネタ帳から削除しました');
       } else {
         // 保存処理
@@ -122,14 +134,16 @@ export default function ComparePage() {
         if (!response.ok) {
           const err = await response.json();
           if (err.detail?.includes('already exists')) {
-            setIsSaved(true);
+            await fetchComparisonData();
             return;
           }
           alert('保存失敗: ' + (err.detail || 'エラー'));
           return;
         }
 
-        setIsSaved(true); // 色を真鍮色（アンバー）にする
+        // DB状態を再取得
+        await fetchComparisonData();
+
         showToast('ネタ帳に追加しました！');
       }
     } catch (error) {
@@ -199,7 +213,9 @@ export default function ComparePage() {
         </header>
 
         <div className="space-y-6">
-          <p className="mb-6 text-center font-bold text-brand-text">5カ国比較要約</p>
+          <p className="mb-6 text-center font-bold text-brand-text">
+            5カ国比較要約
+          </p>
 
           {comparison ? (
             <div className="space-y-6">
@@ -233,7 +249,9 @@ export default function ComparePage() {
                     >
                       {/* URL表示 */}
                       <div className="text-xs text-brand-muted">
-                        <span className="font-semibold text-brand-text">引用元:</span>
+                        <span className="font-semibold text-brand-text">
+                          引用元:
+                        </span>
 
                         <span className="ml-1">{country.media_name}</span>
 

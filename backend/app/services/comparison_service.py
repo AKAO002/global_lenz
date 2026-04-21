@@ -27,7 +27,7 @@ def get_comparison_summary_by_id(summary_id: int):
     return response.data
 
 # 比較要約詳細画面の表示
-def get_comparison_detail(comparison_id: int):
+def get_comparison_detail(comparison_id: int,public_user_id: str | None = None,):
 
     response = (
         supabase
@@ -57,8 +57,8 @@ def get_comparison_detail(comparison_id: int):
             )
             """
         )
-        .eq("topic_id", comparison_id)
-        .single()
+        .eq("id", comparison_id)
+        .maybe_single()
         .execute()
     )
 
@@ -69,10 +69,13 @@ def get_comparison_detail(comparison_id: int):
 
     topic_id = data["topic_id"]
 
+    real_comparison_id = data["id"]
+
     result_countries = []
 
    # topics 内に country が入っている
-    country_list = data["topics"]["country_summaries"]
+    topic = data.get("topics") or {}
+    country_list = topic.get("country_summaries") or []
 
     for c in country_list:
 
@@ -85,38 +88,57 @@ def get_comparison_detail(comparison_id: int):
             .eq("topic_id", topic_id)
             .eq("media_id", media_id)
             .limit(1)
+            .maybe_single()
             .execute()
         )
 
-        url = None
+        url = article_res.data["url"] if article_res and article_res.data else None
 
-        if article_res.data:
-            url = article_res.data[0]["url"]
+        media = c.get("medias") or {}
 
         result_countries.append({
             "country_name":
-                c["medias"]["country_name"],
+                media.get("country_name"),
 
             "media_name":
-                c["medias"]["media_name"],
+                media.get("media_name"),
 
             "summary":
-                c["country_summary"],
+                c.get("country_summary"),
 
             "url":
                 url
         })
+    
+     # 保存済み判定
+    is_already_saved = False
+
+    if public_user_id:
+
+        favorite_check = (
+            supabase
+            .table("favorites")
+            .select("id")
+            .eq("user_id", public_user_id)
+            .eq("comparison_summary_id", real_comparison_id)
+            .limit(1)
+            .maybe_single()
+            .execute()
+        )
+
+        if favorite_check and favorite_check.data:
+            is_already_saved = True
 
     return {
 
         "comparison_id":
-            data["id"],
+            real_comparison_id,
 
         "created_at":
             data["created_at"],
 
         "topic_name":
-            data["topics"]["topic_name"],
+            (data.get("topics") or {}).get("topic_name"),
 
         "variance_score":
             data["variance_score"],
@@ -128,5 +150,8 @@ def get_comparison_detail(comparison_id: int):
         data["difficult_word"],
 
         "country_summaries":
-            result_countries
+            result_countries,
+
+        "is_already_saved":
+            is_already_saved
     }
