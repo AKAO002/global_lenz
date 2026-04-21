@@ -164,7 +164,7 @@ export default function NotebookPage() {
         <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col">
           {/* --- ヘッダー部分 --- */}
           <div className="relative mb-10 flex items-center justify-between pb-3 border-b-2 border-[#1E2761]">
-            <h1 className="text-2xl font-extrabold tracking-tighter text-[#028090]">
+            <h1 className="text-2xl font-extrabold tracking-tighter">
               ネタ帳リスト
             </h1>
 
@@ -183,7 +183,7 @@ export default function NotebookPage() {
               }}
               className={`flex items-center justify-center rounded-full border transition-all px-4 py-1.5 active:opacity-70 ${
                 isEditMode && selectedIds.length > 0
-                  ? 'border-orange-400 bg-orange-400'
+                  ? 'border-[#E8603C] bg-[#E8603C]/400'
                   : 'border-brand-border/70 bg-brand-accent-softer/40'
               }`}
             >
@@ -216,11 +216,11 @@ export default function NotebookPage() {
               {groupedTopics.map((group: any, index: number) => (
                 <div
                   key={`group-${index}`}
-                  className="bg-[#FAF0E6] text-[#1E2761] p-7 rounded-3xl shadow-lg relative overflow-hidden border border-[#1E2761]/30"
+                  className="bg-gray-50 text-[#1E2761] p-7 rounded-3xl shadow-lg relative overflow-hidden border border-[#1E2761]/30"
                 >
                   {/* 日付 */}
                   <div className="flex items-center gap-4 mb-5 pb-2 border-b border-[#028090]/20">
-                    <span className="tabular-nums font-extrabold text-lg text-[#028090]">
+                    <span className="tabular-nums font-extrabold text-lg">
                       {group.created_at
                         ? new Date(group.created_at).toLocaleDateString(
                             'ja-JP',
@@ -255,7 +255,7 @@ export default function NotebookPage() {
                               selectedIds.some(
                                 (item) => item.favorite_id === link.favorite_id
                               )
-                                ? 'bg-orange-400 text-white border-orange-400'
+                                ? 'bg-[#E8603C] text-white border-[#E8603C]/400'
                                 : 'bg-white/40 text-[#2D4A36] border-[#2D4A36]/10'
                             }`}
                           >
@@ -266,7 +266,7 @@ export default function NotebookPage() {
                               checked={selectedIds.some(
                                 (item) => item.favorite_id === link.favorite_id
                               )}
-                              className="pointer-events-none h-3 w-3 accent-orange-600"
+                              className="pointer-events-none h-3 w-3 accent-[#E8603C]"
                             />
                             {link.label}
                           </button>
@@ -278,7 +278,7 @@ export default function NotebookPage() {
                                 ? `/topic/${link.target_id}`
                                 : `/comparison/${link.target_id}`
                             }
-                            className="px-5 py-2.5 bg-[#FAF0E6] text-[#1E2761] rounded-xl text-sm font-bold shadow hover:bg-[#FAF0E6]/90 transition-colors flex items-center gap-2"
+                            className="px-5 py-2.5 bg-gray-50 text-[#1E2761] rounded-xl text-sm font-bold shadow hover:bg-[#FAF0E6]/90 transition-colors flex items-center gap-2"
                           >
                             {/* アイコン */}
                             <span>{link.label}</span>

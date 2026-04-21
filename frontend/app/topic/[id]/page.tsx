@@ -168,7 +168,7 @@ export default function TopicPage({
     <RequireAuth>
       {' '}
       {/* これで未ログインは弾く */}
-      <div className="p-6 max-w-md mx-auto bg-[#FDFBF6] min-h-screen pt-10 text-gray-800">
+      <div className="p-6 max-w-md mx-auto bg-brand-canvas min-h-screen pt-10 text-gray-800">
         {/* ヘッダーエリア*/}
         <header className="flex items-center justify-between mb-8 pb-3 border-b border-gray-200">
           <div className="flex items-baseline gap-2">
@@ -238,19 +238,19 @@ export default function TopicPage({
           </p>
 
           {/* 引用元 */}
-          <div className="text-xs text-brand-muted">
-            <span className="font-semibold text-brand-text">引用元</span>
+          <div className="text-xs text-gray-500 border rounded-lg p-4 bg-gray-50">
+            <span className="font-semibold">引用元</span>
 
-            <span className="ml-1">{topic.media_name}</span>
+            <span className="ml-1">{topic?.media_name}</span>
 
             <div className="mt-1">
               <a
                 href={topic?.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="break-all text-brand-accent-secondary underline"
+                className="underline break-all"
               >
-                {topic.url}
+                {topic?.url}
               </a>
             </div>
           </div>

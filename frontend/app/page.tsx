@@ -285,8 +285,17 @@ export default function HomePage() {
                                 {summary.country_name}：
                               </span>
                               {!isNoData && (
-                                <span className="text-[11px] text-yellow-500">
-                                  {'★'.repeat(summary.recommend_score || 0)}
+                                <span className="text-[11px] tracking-wider">
+                                  {/* 該当するスコア分の星（黄色） */}
+                                  <span className="text-yellow-500">
+                                    {'★'.repeat(summary.recommend_score || 0)}
+                                  </span>
+                                  {/* 残りの星（グレー） */}
+                                  <span className="text-gray-200">
+                                    {'★'.repeat(
+                                      5 - (summary.recommend_score || 0)
+                                    )}
+                                  </span>
                                 </span>
                               )}
                             </div>

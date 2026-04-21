@@ -246,7 +246,7 @@ export default function ComparePage() {
                 />
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-4 mt-16">
                 {comparison.country_summaries
                   ?.filter((country: any) => country.url !== null)
                   .map((country: any, index: number) => (
