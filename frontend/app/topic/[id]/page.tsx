@@ -171,11 +171,10 @@ export default function TopicPage({
             <h1 className="text-xl font-bold">
               {new Date()
                 .toLocaleDateString('ja-JP', {
-                  month: 'numeric',
+                  month: 'long',
                   day: 'numeric',
                   weekday: 'short',
-                })
-                .replace(/\//g, '月')}
+                })}
             </h1>
           </div>
 
@@ -235,8 +234,8 @@ export default function TopicPage({
           </p>
 
           {/* 引用元 */}
-          <div className="text-xs text-gray-500 border rounded-lg p-4 bg-gray-50">
-            <span className="font-semibold">引用元</span>
+          <div className="text-xs text-brand-muted">
+            <span className="font-semibold text-brand-text">引用元</span>
 
             <span className="ml-1">{topic?.media_name}</span>
 
@@ -245,7 +244,7 @@ export default function TopicPage({
                 href={topic?.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="underline break-all"
+                className="break-all text-brand-accent-secondary underline"
               >
                 {topic?.url}
               </a>
