@@ -93,29 +93,10 @@ export default function TopicPage({
         return;
       }
 
-      // 保存済みなら何もしない
-      if (isSaved) return;
       const token = session.access_token;
 
-<<<<<<< HEAD
-      // 保存処理
-      const isComparisonPage = window.location.pathname.includes('comparison');
-      const response = await fetch('http://localhost:8000/api/favorites/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`, // バックエンドの認証を通す
-        },
-        body: JSON.stringify({
-          [isComparisonPage ? 'comparison_summary_id' : 'country_summary_id']:
-            parseInt(id),
-        }),
-      });
-=======
       if (isSaved) {
         // 削除処理
-        console.log('ネタ帳から削除中...');
-
         const isComparisonPage =
           window.location.pathname.includes('comparison');
 
@@ -124,21 +105,39 @@ export default function TopicPage({
           id,
           type: isComparisonPage ? 'comparison' : 'country',
         });
->>>>>>> develop
 
-      if (!response.ok) {
-        const err = await response.json();
+        setIsSaved(false);
+        showToast('ネタ帳から削除しました');
+      } else {
+        // 保存処理
+        const isComparisonPage =
+          window.location.pathname.includes('comparison');
+        const response = await fetch('http://localhost:8000/api/favorites/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`, // バックエンドの認証を通す
+          },
+          body: JSON.stringify({
+            [isComparisonPage ? 'comparison_summary_id' : 'country_summary_id']:
+              parseInt(id),
+          }),
+        });
 
-        // 二重保存防止のメッセージチェック
-        if (err.detail?.includes('already exists')) {
-          setIsSaved(true);
-        } else {
-          alert('保存失敗: ' + err.detail);
+        if (!response.ok) {
+          const err = await response.json();
+
+          // 二重保存防止のメッセージチェック
+          if (err.detail?.includes('already exists')) {
+            setIsSaved(true);
+          } else {
+            alert('保存失敗: ' + err.detail);
+          }
+          return;
         }
-        return;
+        setIsSaved(true);
+        showToast('ネタ帳に追加しました！');
       }
-      setIsSaved(true);
-      showToast('ネタ帳に追加しました！');
     } catch (error: any) {
       console.error('操作に失敗しました:', error);
       alert('エラーが発生しました：');
@@ -217,16 +216,16 @@ export default function TopicPage({
         {/* 要約テキスト */}
         <div className="space-y-6">
           <p className="text-center font-bold mb-6">
-            {topic?.topic_name}について
+            {topic.topic_name}について
           </p>
 
           {/* 国旗画像エリア */}
           <div className="flex justify-center my-6">
-            {flagImages[topic?.country_name] && (
+            {flagImages[topic.country_name] && (
               <div className="relative w-28 h-20 transition-opacity duration-300 hover:opacity-100">
                 <Image
-                  src={flagImages[topic?.country_name]}
-                  alt={`${topic?.country_name}の国旗`}
+                  src={flagImages[topic.country_name]}
+                  alt={`${topic.country_name}の国旗`}
                   fill
                   sizes="112px"
                   priority
@@ -238,14 +237,14 @@ export default function TopicPage({
 
           {/* 要約本文 */}
           <p className="text-sm leading-relaxed tracking-wider">
-            {topic?.summary}
+            {topic.summary}
           </p>
 
           {/* 引用元 */}
           <div className="text-xs text-gray-500 border rounded-lg p-4 bg-gray-50">
             <span className="font-semibold">引用元</span>
 
-            <span className="ml-1">{topic?.media_name}</span>
+            <span className="ml-1">{topic.media_name}</span>
 
             <div className="mt-1">
               <a
@@ -254,7 +253,7 @@ export default function TopicPage({
                 rel="noopener noreferrer"
                 className="underline break-all"
               >
-                {topic?.url}
+                {topic.url}
               </a>
             </div>
           </div>
