@@ -80,7 +80,7 @@ export default function TopicPage({
     router.push('/');
   };
 
-  // ネタ帳への保存・削除処理
+  // ネタ帳への保存処理
   const handleSaveToNotebook = async () => {
     try {
       // ログインユーザーを取得
@@ -97,8 +97,6 @@ export default function TopicPage({
 
       if (isSaved) {
         // 削除処理
-        console.log('ネタ帳から削除中...');
-
         const isComparisonPage =
           window.location.pathname.includes('comparison');
 
@@ -128,11 +126,9 @@ export default function TopicPage({
 
         if (!response.ok) {
           const err = await response.json();
-          console.error('FastAPIエラー:', err);
 
           // 二重保存防止のメッセージチェック
           if (err.detail?.includes('already exists')) {
-            alert('このトピックは保存済みです');
             setIsSaved(true);
           } else {
             alert('保存失敗: ' + err.detail);
@@ -144,7 +140,7 @@ export default function TopicPage({
       }
     } catch (error: any) {
       console.error('操作に失敗しました:', error);
-      alert('エラーが発生しました：' + error.message);
+      alert('エラーが発生しました：');
     }
   };
 
@@ -172,18 +168,17 @@ export default function TopicPage({
     <RequireAuth>
       {' '}
       {/* これで未ログインは弾く */}
-      <div className="p-6 max-w-md mx-auto bg-[#FDFBF6] min-h-screen text-gray-800">
+      <div className="p-6 max-w-md mx-auto bg-brand-canvas min-h-screen pt-10 text-gray-800">
         {/* ヘッダーエリア*/}
         <header className="flex items-center justify-between mb-8 pb-3 border-b border-gray-200">
           <div className="flex items-baseline gap-2">
             {/* 日付*/}
             <h1 className="text-xl font-bold">
-              {new Date()
-                .toLocaleDateString('ja-JP', {
-                  month: 'long',
-                  day: 'numeric',
-                  weekday: 'short',
-                })}
+              {new Date().toLocaleDateString('ja-JP', {
+                month: 'long',
+                day: 'numeric',
+                weekday: 'short',
+              })}
             </h1>
           </div>
 
@@ -192,8 +187,8 @@ export default function TopicPage({
             onClick={handleSaveToNotebook}
             className={`flex items-center justify-center w-10 h-10 rounded-full transition-colors ${
               isSaved
-                ? 'text-amber-700 bg-amber-50' // 保存済み：真鍮色（シック）
-                : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100' // 未保存
+                ? 'bg-[#E8603C]/10 text-[#E8603C]' // 保存済み
+                : 'text-gray-400 hover:bg-[#E8603C]/5 hover:text-[#E8603C]' // 未保存
             }`}
             title={isSaved ? '保存済み' : 'ネタ帳に追加'}
           >
@@ -218,16 +213,16 @@ export default function TopicPage({
         {/* 要約テキスト */}
         <div className="space-y-6">
           <p className="text-center font-bold mb-6">
-            {topic?.topic_name}について
+            {topic.topic_name}について
           </p>
 
           {/* 国旗画像エリア */}
           <div className="flex justify-center my-6">
-            {flagImages[topic?.country_name] && (
+            {flagImages[topic.country_name] && (
               <div className="relative w-28 h-20 transition-opacity duration-300 hover:opacity-100">
                 <Image
-                  src={flagImages[topic?.country_name]}
-                  alt={`${topic?.country_name}の国旗`}
+                  src={flagImages[topic.country_name]}
+                  alt={`${topic.country_name}の国旗`}
                   fill
                   sizes="112px"
                   priority
@@ -239,12 +234,12 @@ export default function TopicPage({
 
           {/* 要約本文 */}
           <p className="text-sm leading-relaxed tracking-wider">
-            {topic?.summary}
+            {topic.summary}
           </p>
 
           {/* 引用元 */}
-          <div className="text-xs text-brand-muted">
-            <span className="font-semibold text-brand-text">引用元</span>
+          <div className="text-xs text-gray-500 border rounded-lg p-4 bg-gray-50">
+            <span className="font-semibold">引用元</span>
 
             <span className="ml-1">{topic?.media_name}</span>
 
@@ -253,7 +248,7 @@ export default function TopicPage({
                 href={topic?.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="break-all text-brand-accent-secondary underline"
+                className="underline break-all"
               >
                 {topic?.url}
               </a>
@@ -261,11 +256,12 @@ export default function TopicPage({
           </div>
         </div>
 
-        {/* ログアウトボタン*/}
-        <div className="mt-16 text-center">
+        {/* ログアウトボタン */}
+        <div className="mx-auto mt-12 w-full flex justify-center">
           <button
+            type="button"
             onClick={handleLogout}
-            className="bg-[#AEE9A1] px-4 py-1 rounded text-xs text-gray-700 font-bold hover:bg-[#97D48D] transition-colors"
+            className="text-xs font-bold text-[#1E2761]/40 hover:text-[#E8603C] transition-colors"
           >
             ログアウト
           </button>
@@ -273,11 +269,11 @@ export default function TopicPage({
 
         {/* トースト表示 */}
         {toast.visible && (
-          <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-bottom-4 duration-300">
-            <div className="bg-gray-800/90 backdrop-blur-md text-white px-6 py-3 rounded-full shadow-lg text-sm font-medium flex items-center gap-2">
+          <div className="fixed bottom-28 left-1/2 -translate-x-1/2 z-[110] animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <div className="bg-[#E8603C] text-white px-7 py-3.5 rounded-full shadow-2xl text-sm font-bold flex items-center gap-2">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4 text-amber-400"
+                className="h-5 w-5 text-white"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -285,11 +281,13 @@ export default function TopicPage({
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  strokeWidth={2}
+                  strokeWidth={3}
                   d="M5 13l4 4L19 7"
                 />
               </svg>
-              {toast.message}
+              <span className="text-xs font-bold whitespace-nowrap overflow-hidden text-ellipsis">
+                {toast.message}
+              </span>
             </div>
           </div>
         )}

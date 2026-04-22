@@ -17,7 +17,11 @@ export default function NotebookPage() {
   const [loading, setLoading] = useState(true);
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<any[]>([]);
-  // const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
+  const [toastVisible, setToastVisible] = useState(false);
+  const [toast, setToast] = useState<{ message: string; visible: boolean }>({
+    message: '',
+    visible: false,
+  });
 
   // --- DBからデータを取得する処理 ---
   const fetchFavorites = async () => {
@@ -60,8 +64,6 @@ export default function NotebookPage() {
 
   const isEmpty = useMemo(() => items.length === 0, [items.length]);
 
-  // const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
-
   // チェックボックスのON/OFF
   const toggleSelect = (item: any) => {
     setSelectedIds((prev) => {
@@ -75,15 +77,20 @@ export default function NotebookPage() {
     });
   };
 
+  // トースト表示関数（３秒間表示）
+  const showToast = (message: string) => {
+    setToast({ message, visible: true });
+    setTimeout(() => {
+      setToast({ message: '', visible: false });
+    }, 3000);
+  };
+
   // 一括削除実行
   const handleDeleteSelected = async () => {
     if (selectedIds.length === 0) {
       setIsEditMode(false); // 何も選んでなければモード終了
       return;
     }
-
-    if (!confirm(`${selectedIds.length}件のネタを削除してもよろしいですか？`))
-      return;
 
     try {
       const token = session?.access_token;
@@ -102,20 +109,17 @@ export default function NotebookPage() {
 
       await Promise.all(deletePromises);
 
-      // 🌟 画面から消す (item.favorite_id なのか item.id なのか、DBのキーに合わせてください)
-      // setItems((prev) =>
-      //   prev.filter((item) => !selectedIds.has(item.favorite_id))
-      // );
-
       // 最新取得
       await fetchFavorites();
 
       // 後片付け
       setSelectedIds([]);
       setIsEditMode(false);
-      alert('削除しました');
+
+      showToast(`${selectedIds.length}件のネタを削除しました！`);
     } catch (error) {
       console.error('削除失敗:', error);
+      showToast('削除に失敗しました');
     }
   };
 
@@ -156,54 +160,67 @@ export default function NotebookPage() {
 
   return (
     <RequireAuth>
-      <div className="relative min-h-screen bg-brand-canvas p-4 pb-28">
+      <div className="relative min-h-screen pt-10 bg-brand-canvas p-5 pb-32">
         <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col">
           {/* --- ヘッダー部分 --- */}
-          <div className="relative mb-8 flex items-center justify-center py-2">
-            {/* タイトル */}
-            <h1 className="text-xl font-bold tracking-tight text-brand-text">
+          <div className="relative mb-10 flex items-center justify-between pb-3 border-b-2 border-[#1E2761]">
+            <h1 className="text-2xl font-extrabold tracking-tighter">
               ネタ帳リスト
             </h1>
-            {/* 編集ボタン */}
+
+            {/* 編集・削除ボタン */}
             <button
               onClick={() => {
                 if (isEditMode) {
-                  handleDeleteSelected(); // モード中なら削除実行
+                  if (selectedIds.length > 0) {
+                    handleDeleteSelected();
+                  } else {
+                    setIsEditMode(false);
+                  }
                 } else {
-                  setIsEditMode(true); // モード中でなければ編集開始
+                  setIsEditMode(true);
                 }
               }}
-              className={`absolute right-0 top-1/2 -translate-y-1/2 px-3 py-1 rounded-full text-xs font-bold transition-all shadow-sm outline-none focus:ring-0 ${
-                isEditMode
-                  ? 'bg-orange-400 text-white hover:bg-orange-400' // 実行ボタン
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200' // 編集開始ボタン
+              className={`flex items-center justify-center rounded-full border transition-all px-4 py-1.5 active:opacity-70 ${
+                isEditMode && selectedIds.length > 0
+                  ? 'border-[#E8603C] bg-[#E8603C]/400'
+                  : 'border-brand-border/70 bg-brand-accent-softer/40'
               }`}
             >
-              {isEditMode
-                ? selectedIds.length > 0
-                  ? `${selectedIds.length}件を削除`
-                  : 'キャンセル'
-                : '編集'}
+              <span
+                className={`text-[11px] font-bold ${
+                  !isEditMode
+                    ? 'text-[#1E2761]' // 通常時はネイビー
+                    : selectedIds.length > 0
+                      ? 'text-white' // 🌟 削除ボタン時は背景に合わせて白文字
+                      : 'text-[#E8603C]' // キャンセルはコーラルレッド
+                }`}
+              >
+                {isEditMode
+                  ? selectedIds.length > 0
+                    ? `${selectedIds.length}件を削除`
+                    : 'キャンセル'
+                  : '編集'}
+              </span>
             </button>
           </div>
 
           {loading ? (
-            <div className="flex justify-center pt-20 text-gray-400">
+            <div className="flex justify-center pt-20 text-[#FAF0E6]/80 font-medium">
               読み込み中...
             </div>
           ) : isEmpty ? (
             <EmptyState />
           ) : (
-            <div className="flex flex-col gap-5">
-              {/* まとめた groupedTopics を使う */}
+            <div className="flex flex-col gap-6">
               {groupedTopics.map((group: any, index: number) => (
                 <div
                   key={`group-${index}`}
-                  className="bg-[#D1EBD8] text-[#2D4A36] px-8 py-7 rounded-3xl shadow-sm relative overflow-hidden"
+                  className="bg-gray-50 text-[#1E2761] p-7 rounded-3xl shadow-lg relative overflow-hidden border border-[#1E2761]/30"
                 >
-                  {/* 日付とトピック名*/}
-                  <div className="flex gap-4 font-bold text-[15px] mb-3">
-                    <span className="tabular-nums">
+                  {/* 日付 */}
+                  <div className="flex items-center gap-4 mb-5 pb-2 border-b border-[#028090]/20">
+                    <span className="tabular-nums font-extrabold text-lg">
                       {group.created_at
                         ? new Date(group.created_at).toLocaleDateString(
                             'ja-JP',
@@ -211,7 +228,8 @@ export default function NotebookPage() {
                           )
                         : '--/--'}
                     </span>
-                    <span>
+                    {/* トピック名 */}
+                    <span className="text-lg font-extrabold tracking-tight">
                       {group.country_summaries?.topic_name ||
                         group.comparison_summary?.topic_name ||
                         group.topic_name ||
@@ -220,10 +238,11 @@ export default function NotebookPage() {
                   </div>
 
                   {/* リンク/選択ボタンをまとまって表示 */}
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-3">
                     {group.links.map((link: any) => (
                       <div key={link.favorite_id} className="relative">
                         {isEditMode ? (
+                          // 編集モード時のチェックボタン
                           <button
                             onClick={() =>
                               toggleSelect({
@@ -236,30 +255,45 @@ export default function NotebookPage() {
                               selectedIds.some(
                                 (item) => item.favorite_id === link.favorite_id
                               )
-                                ? 'bg-orange-400 text-white border-orange-400'
+                                ? 'bg-[#E8603C] text-white border-[#E8603C]/400'
                                 : 'bg-white/40 text-[#2D4A36] border-[#2D4A36]/10'
                             }`}
                           >
+                            {/* チェックボックス */}
                             <input
                               type="checkbox"
                               readOnly
                               checked={selectedIds.some(
                                 (item) => item.favorite_id === link.favorite_id
                               )}
-                              className="pointer-events-none h-3 w-3 accent-orange-600"
+                              className="pointer-events-none h-3 w-3 accent-[#E8603C]"
                             />
                             {link.label}
                           </button>
                         ) : (
+                          // 通常モード時のリンクボタン
                           <Link
                             href={
                               link.type === 'country'
                                 ? `/topic/${link.target_id}`
                                 : `/comparison/${link.target_id}`
                             }
-                            className="px-4 py-1.5 bg-white/60 text-[#2D4A36] rounded-lg text-[14px] border border-[#2D4A36]/10 hover:bg-white transition-colors"
+                            className="px-5 py-2.5 bg-gray-50 text-[#1E2761] rounded-xl text-sm font-bold shadow hover:bg-[#FAF0E6]/90 transition-colors flex items-center gap-2"
                           >
-                            {link.label}
+                            {/* アイコン */}
+                            <span>{link.label}</span>
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-4 w-4"
+                              viewBox="0 0 20 20"
+                              fill="currentColor"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
                           </Link>
                         )}
                       </div>
@@ -272,15 +306,40 @@ export default function NotebookPage() {
         </div>
 
         {/* ログアウトボタン */}
-        <div className="mx-auto mt-8 w-full flex justify-center">
+        <div className="mx-auto mt-12 w-full flex justify-center">
           <button
             type="button"
             onClick={handleLogout}
-            className="w-auto px-10 py-2 rounded-full border border-emerald-200/90 bg-emerald-50 py-2.5 text-sm font-medium text-emerald-900"
+            className="text-xs font-bold text-[#1E2761]/40 hover:text-[#E8603C] transition-colors"
           >
             ログアウト
           </button>
         </div>
+
+        {/* --- トースト表示 --- */}
+        {toast.visible && (
+          <div className="fixed bottom-28 left-1/2 -translate-x-1/2 z-[110] animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <div className="bg-[#E8603C] text-white px-7 py-3.5 rounded-full shadow-2xl text-sm font-bold flex items-center gap-2">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 text-white"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={3}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+              <span className="text-xs font-bold whitespace-nowrap overflow-hidden text-ellipsis">
+                {toast.message}
+              </span>
+            </div>
+          </div>
+        )}
       </div>
     </RequireAuth>
   );
