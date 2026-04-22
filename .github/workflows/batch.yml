@@ -33,4 +33,4 @@ jobs:
 
         run: |
           cd backend
-          python app/batch_worker.py
+          python -m app/batch_worker.py
