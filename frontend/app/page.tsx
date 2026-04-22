@@ -339,7 +339,7 @@ export default function HomePage() {
 
                   <div className="mt-8">
                     <Link
-                      href={`/comparison/${topic.topic_id}`}
+                      href={`/comparison/${topic.comparison_id}`}
                       className="block w-full rounded-3xl bg-[#E8603C] py-4 text-center font-bold text-white shadow-md transition-opacity hover:opacity-95"
                     >
                       5カ国比較要約を見る
