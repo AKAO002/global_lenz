@@ -9,3 +9,4 @@ psycopg2-binary
 googlenewsdecoder
 httpx
 python-jose[cryptography]
+requests
