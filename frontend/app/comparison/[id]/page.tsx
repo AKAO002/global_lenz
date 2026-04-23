@@ -167,13 +167,11 @@ export default function ComparePage() {
         <header className="mb-8 flex items-center justify-between border-b border-brand-border pb-3">
           <div className="flex items-baseline gap-2">
             <h1 className="text-xl font-bold text-brand-text">
-              {new Date()
-                .toLocaleDateString('ja-JP', {
-                  month: 'numeric',
-                  day: 'numeric',
-                  weekday: 'short',
-                })
-                .replace(/\//g, '月')}
+              {new Date().toLocaleDateString('ja-JP', {
+                month: 'long',
+                day: 'numeric',
+                weekday: 'short',
+              })}
             </h1>
           </div>
 
@@ -212,7 +210,7 @@ export default function ComparePage() {
           {/* バラツキ度の表示（カプセルなし・中央揃え） */}
           <div className="flex items-center gap-1 mt-1 pb-10">
             <span className="text-[11px] font-bold text-brand-text">
-              バラツキ度：
+              バラつき度：
             </span>
             {comparison && (
               <span className="text-[11px] text-amber-500 tracking-wider">
