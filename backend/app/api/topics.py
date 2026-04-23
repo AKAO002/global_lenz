@@ -1,4 +1,3 @@
-from datetime import date
 from fastapi import APIRouter, HTTPException
 
 from app.db.repository import get_supabase_client
@@ -10,8 +9,7 @@ router = APIRouter()
 
 @router.get("/today")
 def get_today_topics():
-    today = date.today().isoformat()
-    cache_key = make_cache_key("topics_today", today)
+    cache_key = make_cache_key("topics_latest")
 
     supabase = get_supabase_client()
     if not supabase:
@@ -32,9 +30,9 @@ def get_today_topics():
                     medias(country_name)
                 )
             """) 
-            .gte("created_at", f"{today}T00:00:00") 
             .is_("is_search", False)
-            .order("created_at")
+            .order("created_at",desc=True)
+            .limit(6)
             .execute()
         )
 
@@ -49,7 +47,7 @@ def get_today_topics():
             })
             
         cache_set(cache_key, formatted_topics, TTL_API_RESPONSE)
-        return {"source": "db", "date": today, "topics": formatted_topics}
+        return {"source": "db",  "topics": formatted_topics}
 
     except Exception as e:
         print(f"Error: {e}")
