@@ -1,3 +1,5 @@
+from typing import Optional
+
 from app.db.supabase import supabase
 from app.services.favorite_service import (
     get_user_favorite_ids
@@ -28,7 +30,7 @@ def get_country_summary_by_id(summary_id: int):
 
     return response.data
 
-def get_country_detail(country_id: int,public_user_id: str | None = None):
+def get_country_detail(country_id: int, public_user_id: Optional[str] = None):
 
     response = (
         supabase
@@ -129,7 +131,7 @@ def get_country_detail(country_id: int,public_user_id: str | None = None):
             is_already_saved
     }
 
-def get_home_country_summaries(is_login: bool,auth_user_id: str | None):
+def get_home_country_summaries(is_login: bool, auth_user_id: Optional[str]):
     from datetime import date          # ← 追加
     today = date.today().isoformat() 
 

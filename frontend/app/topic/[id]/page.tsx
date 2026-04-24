@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useId, useMemo, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useId, useMemo, useCallback } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import RequireAuth from '@/components/RequireAuth';
 import { deleteFavorite } from '@/lib/api/favorites';
@@ -22,12 +22,9 @@ const flagImages: { [key: string]: string } = {
   カタール: '/images/qatar.png',
 };
 
-export default function TopicPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = React.use(params);
+export default function TopicPage() {
+  const params = useParams();
+  const id = params?.id as string;
   const router = useRouter();
   const [topic, setTopic] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -130,7 +127,7 @@ export default function TopicPage({
 
         await deleteFavorite({
           token,
-          id,
+          id: Number(id),
           type: isComparisonPage ? 'comparison' : 'country',
         });
 
