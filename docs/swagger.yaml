@@ -1,18 +1,21 @@
 openapi: 3.0.3
 
 info:
-  title: Global News Summary API
+  title: Global Lenz API
   description: |
     各国ニュース要約アプリAPI
 
     ■ 主機能
     - 各国要約一覧
-    - 各国要約詳細（認証必要）
+    - 各国要約詳細
     - 比較要約
     - ネタ帳（favorites）
+    - 検索（AI要約生成）
+    - トピック一覧
 
-    ■ 拡張予定
-    - subscription（購読機能）
+    ■ キャッシュ
+    - search: Redis（6時間）
+    - topics: Redis
 
   version: 1.0.0
 
@@ -23,7 +26,8 @@ tags:
   - name: CountrySummaries
   - name: ComparisonSummaries
   - name: Favorites
-  - name: Subscriptions
+  - name: Search
+  - name: Topics
 
 components:
   securitySchemes:
@@ -48,27 +52,20 @@ components:
           type: string
           example: 輸入時に課される税金
 
-    # =========================
-    # Article
-    # =========================
-
     Article:
       type: object
       properties:
-        id:
-          type: integer
-          example: 101
-
         title:
           type: string
-          example: ホルムズ海峡で緊張高まる
 
         url:
           type: string
-          example: https://example.com/article
+
+        description:
+          type: string
 
     # =========================
-    # Country Summaries
+    # Country
     # =========================
 
     CountrySummaryListItem:
@@ -83,21 +80,17 @@ components:
         topic_name:
           type: string
 
-        media_id:
-          type: integer
-
         country_name:
           type: string
-
-        summary_date:
-          type: string
-          format: date
 
         recommend_score:
           type: integer
 
         summary_preview:
           type: string
+
+        is_favorited:
+          type: boolean
 
     CountrySummaryDetail:
       type: object
@@ -110,10 +103,6 @@ components:
 
         country_name:
           type: string
-
-        summary_date:
-          type: string
-          format: date
 
         recommend_score:
           type: integer
@@ -147,10 +136,6 @@ components:
         topic_name:
           type: string
 
-        summary_date:
-          type: string
-          format: date
-
         variance_score:
           type: integer
 
@@ -163,10 +148,6 @@ components:
         topic_name:
           type: string
 
-        summary_date:
-          type: string
-          format: date
-
         variance_score:
           type: integer
 
@@ -178,13 +159,8 @@ components:
           items:
             $ref: "#/components/schemas/DifficultWord"
 
-        articles:
-          type: array
-          items:
-            $ref: "#/components/schemas/Article"
-
     # =========================
-    # Favorites
+    # Favorite
     # =========================
 
     Favorite:
@@ -201,32 +177,52 @@ components:
           type: integer
           nullable: true
 
-        created_at:
+    # =========================
+    # Search
+    # =========================
+
+    SearchRequest:
+      type: object
+      required:
+        - keyword
+      properties:
+        keyword:
           type: string
-          format: date-time
+          example: イラン核合意
 
-    # =========================
-    # Subscriptions（将来拡張）
-    # =========================
-
-    Subscription:
+    SearchResponse:
       type: object
       properties:
-        id:
-          type: integer
-
-        user_id:
+        topic_name:
           type: string
 
-        status:
+        query_en:
           type: string
-          example: active
 
-        created_at:
+        query_nhk:
           type: string
-          format: date-time
+
+        report:
+          type: object
+
+        media_results:
+          type: object
 
 paths:
+  # =========================
+  # Country Home
+  # =========================
+
+  /api/country-summaries/home:
+    get:
+      tags:
+        - CountrySummaries
+      summary: ホーム用国別要約一覧取得
+
+      responses:
+        "200":
+          description: 成功
+
   # =========================
   # Country List
   # =========================
@@ -235,50 +231,21 @@ paths:
     get:
       tags:
         - CountrySummaries
-      summary: 各国要約一覧取得
-
-      parameters:
-        - name: page
-          in: query
-          schema:
-            type: integer
-            example: 1
-
-        - name: limit
-          in: query
-          schema:
-            type: integer
-            example: 20
-
-        - name: sort
-          in: query
-          schema:
-            type: string
-            enum:
-              - recommend_score
-              - created_at
+      summary: 国別要約一覧取得
 
       responses:
         "200":
           description: 成功
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/CountrySummaryListItem"
 
   # =========================
-  # Country Detail（認証必要）
+  # Country Detail
   # =========================
 
   /api/country-summaries/{id}:
     get:
       tags:
         - CountrySummaries
-      summary: 各国要約詳細取得
-      security:
-        - bearerAuth: []
+      summary: 国別要約1件取得
 
       parameters:
         - name: id
@@ -290,13 +257,30 @@ paths:
       responses:
         "200":
           description: 成功
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/CountrySummaryDetail"
 
-        "401":
-          description: 認証エラー
+        "404":
+          description: データなし
+
+  # =========================
+  # Country Detail Extended
+  # =========================
+
+  /api/country-summaries/{id}/detail:
+    get:
+      tags:
+        - CountrySummaries
+      summary: 国別要約詳細取得（optional login）
+
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+
+      responses:
+        "200":
+          description: 成功
 
   # =========================
   # Comparison List
@@ -311,12 +295,6 @@ paths:
       responses:
         "200":
           description: 成功
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/ComparisonSummaryListItem"
 
   # =========================
   # Comparison Detail
@@ -326,7 +304,7 @@ paths:
     get:
       tags:
         - ComparisonSummaries
-      summary: 比較要約詳細取得
+      summary: 比較要約1件取得
 
       parameters:
         - name: id
@@ -338,10 +316,30 @@ paths:
       responses:
         "200":
           description: 成功
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ComparisonSummaryDetail"
+
+        "404":
+          description: Comparison not found
+
+  # =========================
+  # Comparison Detail Extended
+  # =========================
+
+  /api/comparison-summaries/{id}/detail:
+    get:
+      tags:
+        - ComparisonSummaries
+      summary: 比較要約詳細取得（optional login）
+
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+
+      responses:
+        "200":
+          description: 成功
 
   # =========================
   # Favorites
@@ -368,30 +366,15 @@ paths:
 
       requestBody:
         required: true
-
         content:
           application/json:
             schema:
-              type: object
-
-              properties:
-                country_summary_id:
-                  type: integer
-                  nullable: true
-
-                comparison_summary_id:
-                  type: integer
-                  nullable: true
+              $ref: "#/components/schemas/Favorite"
 
       responses:
-        "201":
+        "200":
           description: 登録成功
 
-  # =========================
-  # Favorite Delete
-  # =========================
-
-  /api/favorites/{id}:
     delete:
       tags:
         - Favorites
@@ -400,9 +383,13 @@ paths:
         - bearerAuth: []
 
       parameters:
-        - name: id
-          in: path
-          required: true
+        - name: country_summary_id
+          in: query
+          schema:
+            type: integer
+
+        - name: comparison_summary_id
+          in: query
           schema:
             type: integer
 
@@ -411,14 +398,14 @@ paths:
           description: 削除成功
 
   # =========================
-  # Subscriptions（将来拡張）
+  # Favorites with summaries
   # =========================
 
-  /api/subscriptions:
+  /api/favorites/with-summaries:
     get:
       tags:
-        - Subscriptions
-      summary: 購読一覧取得（将来機能）
+        - Favorites
+      summary: JOIN済みネタ帳取得
       security:
         - bearerAuth: []
 
@@ -426,27 +413,55 @@ paths:
         "200":
           description: 成功
 
+  # =========================
+  # Search
+  # =========================
+
+  /api/search:
     post:
       tags:
-        - Subscriptions
-      summary: 購読登録（将来機能）
-      security:
-        - bearerAuth: []
+        - Search
+      summary: 検索実行（AI要約生成）
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SearchRequest"
 
       responses:
-        "201":
-          description: 登録成功
+        "200":
+          description: 成功
 
-  /api/subscriptions/{id}:
-    delete:
+        "400":
+          description: 入力エラー
+
+        "500":
+          description: 検索エラー
+
+  # =========================
+  # Topics
+  # =========================
+
+  /api/topics/today:
+    get:
       tags:
-        - Subscriptions
-      summary: 購読削除（将来機能）
-      security:
-        - bearerAuth: []
+        - Topics
+      summary: 今日のトピック取得
+
+      responses:
+        "200":
+          description: 成功
+
+  /api/topics/{topic_id}:
+    get:
+      tags:
+        - Topics
+      summary: トピック詳細取得
 
       parameters:
-        - name: id
+        - name: topic_id
           in: path
           required: true
           schema:
@@ -454,4 +469,4 @@ paths:
 
       responses:
         "200":
-          description: 削除成功
+          description: 成功
