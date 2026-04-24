@@ -167,12 +167,11 @@ export default function ComparePage() {
         <header className="mb-8 flex items-center justify-between border-b border-brand-border pb-3">
           <div className="flex items-baseline gap-2">
             <h1 className="text-xl font-bold text-brand-text">
-              {new Date()
-                .toLocaleDateString('ja-JP', {
-                  month: 'long',
-                  day: 'numeric',
-                  weekday: 'short',
-                })}
+              {new Date().toLocaleDateString('ja-JP', {
+                month: 'long',
+                day: 'numeric',
+                weekday: 'short',
+              })}
             </h1>
           </div>
 
