@@ -25,7 +25,10 @@ export default function NotebookPage() {
 
   // --- DBからデータを取得する処理 ---
   const fetchFavorites = async () => {
-    if (!session?.access_token) return;
+    if (!session?.access_token) {
+      setLoading(false);
+      return;
+    }
 
     try {
       setLoading(true);

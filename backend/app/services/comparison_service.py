@@ -1,3 +1,5 @@
+from typing import Optional
+
 from app.db.supabase import supabase
 
 #　比較要約一覧を取得
@@ -27,7 +29,7 @@ def get_comparison_summary_by_id(summary_id: int):
     return response.data
 
 # 比較要約詳細画面の表示
-def get_comparison_detail(comparison_id: int,public_user_id: str | None = None,):
+def get_comparison_detail(comparison_id: int, public_user_id: Optional[str] = None):
 
     response = (
         supabase
