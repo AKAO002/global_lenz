@@ -207,7 +207,7 @@ export default function ComparePage() {
         <div className="flex flex-col items-center mb-6">
           <p className="font-bold text-brand-text">5カ国比較要約</p>
 
-          {/* バラツキ度の表示（カプセルなし・中央揃え） */}
+          {/* バラつき度の表示（カプセルなし・中央揃え） */}
           <div className="flex items-center gap-1 mt-1 pb-10">
             <span className="text-[11px] font-bold text-brand-text">
               バラつき度：

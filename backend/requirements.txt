@@ -10,3 +10,4 @@ googlenewsdecoder
 httpx
 python-jose[cryptography]
 requests
+pytest

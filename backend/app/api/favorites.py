@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import APIRouter, Query, Depends
 
 from app.core.auth import get_current_user
@@ -45,8 +47,8 @@ def add_favorite(
 #  ネタ帳から削除
 @router.delete("/")
 def remove_favorite(
-    country_summary_id: int | None = Query(default=None),
-    comparison_summary_id: int | None = Query(default=None),
+    country_summary_id: Optional[int] = Query(default=None),
+    comparison_summary_id: Optional[int] = Query(default=None),
     user=Depends(get_current_user)
 ):
 

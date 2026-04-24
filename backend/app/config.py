@@ -33,7 +33,7 @@ SOURCES = {
     "DD News": {
         "name": "DD News",
         "country": "インド",
-        "top_rss": "https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en",
+        "top_rss": "https://news.google.com/rss?hl=en-IN&gl=IN&ceid=IN:en",
         "search_rss": None,
         "lang": "en",
     },

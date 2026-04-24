@@ -51,6 +51,7 @@ export default function HomePage() {
         // バックエンドの s.country をフロントエンド用の s.country_name に変換します
         const formattedTodayData = rawTodayData.map((topic: any) => ({
           ...topic,
+          comparison_id: topic.comparison_id ?? topic.topic_id,
 
           is_comparison_favoritable: topic.is_comparison_favoritable ?? false,
 
