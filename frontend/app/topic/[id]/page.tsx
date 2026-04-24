@@ -1,11 +1,17 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useId, useMemo, useCallback } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import RequireAuth from '@/components/RequireAuth';
 import { deleteFavorite } from '@/lib/api/favorites';
 import Image from 'next/image';
+
+import { normalizeDifficultWords } from '@/lib/normalizeDifficultWords';
+import {
+  DifficultWordsGlossaryModal,
+  DifficultWordsListSection,
+} from '@/components/glossary/DifficultWordsGlossary';
 
 // 国画像
 const flagImages: { [key: string]: string } = {
@@ -16,12 +22,9 @@ const flagImages: { [key: string]: string } = {
   カタール: '/images/qatar.png',
 };
 
-export default function TopicPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = React.use(params);
+export default function TopicPage() {
+  const params = useParams();
+  const id = params?.id as string;
   const router = useRouter();
   const [topic, setTopic] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -30,6 +33,28 @@ export default function TopicPage({
     message: '',
     visible: false,
   });
+
+  const [glossaryOpen, setGlossaryOpen] = useState(false);
+  const [glossaryFocusedTerm, setGlossaryFocusedTerm] = useState<string | null>(
+    null
+  );
+  const glossaryTitleId = useId();
+
+  // データを整形する
+  const terms = useMemo(
+    () => normalizeDifficultWords(topic?.difficult_word),
+    [topic?.difficult_word]
+  );
+
+  const handleSelectTerm = useCallback((term: string) => {
+    setGlossaryFocusedTerm(term);
+    setGlossaryOpen(true);
+  }, []);
+
+  const closeGlossary = useCallback(() => {
+    setGlossaryOpen(false);
+    setGlossaryFocusedTerm(null);
+  }, []);
 
   useEffect(() => {
     async function fetchTopic() {
@@ -102,7 +127,7 @@ export default function TopicPage({
 
         await deleteFavorite({
           token,
-          id,
+          id: Number(id),
           type: isComparisonPage ? 'comparison' : 'country',
         });
 
@@ -232,13 +257,22 @@ export default function TopicPage({
             )}
           </div>
 
-          {/* 要約本文 */}
-          <p className="text-sm leading-relaxed tracking-wider">
-            {topic.summary}
-          </p>
+          <div className="border-l-4 border-[#E8603C] py-2 pl-4">
+            {/* 要約本文 */}
+            <p className="text-sm leading-relaxed tracking-wider pb-10">
+              {topic.summary}
+            </p>
+
+            {/* 重要用語 */}
+            <DifficultWordsListSection
+              terms={terms}
+              onSelectTerm={handleSelectTerm}
+              sectionClassName="mt-6"
+            />
+          </div>
 
           {/* 引用元 */}
-          <div className="text-xs text-gray-500 border rounded-lg p-4 bg-gray-50">
+          <div className="text-xs text-gray-500 border rounded-lg p-4 mt-16 bg-gray-50">
             <span className="font-semibold">引用元</span>
 
             <span className="ml-1">{topic?.media_name}</span>
@@ -291,6 +325,16 @@ export default function TopicPage({
             </div>
           </div>
         )}
+
+        {/* 重要用語モーダル */}
+        <DifficultWordsGlossaryModal
+          open={glossaryOpen}
+          onClose={closeGlossary}
+          titleId={glossaryTitleId}
+          terms={terms}
+          focusedTerm={glossaryFocusedTerm}
+          emptyMessage="この記事には重要用語の解説がありません。"
+        />
       </div>
     </RequireAuth>
   );
