@@ -91,7 +91,8 @@ AIによって各国の視点の違いや傾向を可視化するニュース比
 - 比較要約の生成
 - おすすめ度の表示
 - 主張のばらつき度の表示
-- 記事詳細表示
+- 重要用語の抽出と表示
+- 記事引用元情報表示
 - ネタ帳（お気に入り）保存
 - ユーザー認証（Supabase）
 
@@ -226,23 +227,26 @@ Global-Lenz/
 │
 ├── frontend/                # Next.js（フロントエンド）
 │   ├── app/
+│   ├── components/
+│   ├── context/
+│   ├── lib/
 │   ├── public/
 │   ├── .prettierrc
 │   ├── eslint.config.mjs
 │   ├── package.json
-│   └── Dockerfile
+│   ├── Dockerfile
+│   ├── .env
+│   └── README.md
 │
 ├── backend/                 # FastAPI（バックエンド）
 │   ├── app/
 │   │   └── main.py
 │   ├── requirements.txt
-│   └── Dockerfile
-│
-├── infra/                   # Redis（キャッシュサーバ）
-│   └── redis/
+│   ├── Dockerfile
+│   ├── .env
+│   └── README.md
 │
 ├── docker-compose.yml
-├── .env
 ├── .gitignore
 └── README.md
 ```
