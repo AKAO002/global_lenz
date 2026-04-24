@@ -1,36 +1,31 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 📂 ディレクトリ構成
 
-## Getting Started
+App Routerの規約に基づき、関心の分離を意識した構成にしています。
 
-First, run the development server:
+- **src/app/**: ページルーティングとAPIルートを管理。
+  - `comparison/`: AIによる５カ国比較要約表示ページ。
+  - `topic/[id]/`: 各国のトピック要約詳細表示ページ。
+  - `notebook/`: 保存したトピック（ネタ帳）一覧ページ。
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **src/components/**: 再利用可能なUIコンポーネントを機能単位で集約。
+  - `glossary/`: 重要用語解説モーダル。
+  - `modals/`: アプリ紹介やリンク集などの各種モーダル。
+  - `notebook/`: ネタ帳専用のカードUIや空状態の表示。
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- **src/context/**: `AuthContext.tsx` による認証状態のグローバル管理。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **src/lib/**: Supabaseクライアントや共通のデータ整形ロジック。
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+# 🏗️ 重点的に取り組んだ設計
 
-To learn more about Next.js, take a look at the following resources:
+### 認証ガードの実装
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `RequireAuth` コンポーネントを実装し、ページ単位で簡単にアクセス制限をかけられるように設計しました。
+- 未ログインユーザーが保護されたページ（ネタ帳など）にアクセスした際、閲覧しようとしていたパスを保持したままログインページへ誘導し、ログイン後に自動で元のページへ戻す「シームレスな遷移」を実現しています。
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 機能単位のコンポーネント分割
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `components/glossary` や `components/notebook` のように、特定の機能に関連するコンポーネントを一箇所に集約。
+- これにより、プロジェクトが大規模化した際もコードの影響範囲を特定しやすく、保守性を高めています。
